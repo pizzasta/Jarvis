@@ -588,3 +588,65 @@ body[data-city-state="active"] .hud-waveform span:nth-child(10) { animation-dela
   .orb-ring--2 { display: none; }
   .building-card { width: 76px; }
 }
+
+
+/* ═══════════════════════════════════════════
+   BUILDING UNIQUE IDENTITIES (v3.0)
+═══════════════════════════════════════════ */
+
+/* Each building card gets a top accent bar */
+.building-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: linear-gradient(90deg, transparent, var(--building-color), transparent);
+  opacity: 0.3;
+  transition: opacity var(--t-slow);
+}
+.building-card:hover::after { opacity: 1; }
+body[data-city-state='active'] .building-card::after { opacity: 0.5; }
+
+/* Building ID-specific icon glow colors */
+.building-card[data-building-id='songwriting']       { --building-color: #e040fb; --building-color-2: #f8a6ff; }
+.building-card[data-building-id='design-tower']      { --building-color: #ff9500; --building-color-2: #ffcc02; }
+.building-card[data-building-id='edit-library']      { --building-color: #4fc3f7; --building-color-2: #b3e5fc; }
+.building-card[data-building-id='research-district'] { --building-color: #69f0ae; --building-color-2: #b9fbc0; }
+.building-card[data-building-id='project-lab']       { --building-color: #ff5252; --building-color-2: #ff8a80; }
+.building-card[data-building-id='ops-center']        { --building-color: #b0bec5; --building-color-2: #eceff1; }
+.building-card[data-building-id='memory-vault']      { --building-color: #7c4dff; --building-color-2: #b388ff; }
+.building-card[data-building-id='jarvis-core']       { --building-color: #ff2d78; --building-color-2: #ff6bac; }
+.building-card[data-building-id='vision-lab']        { --building-color: #00e5ff; --building-color-2: #40ffff; }
+.building-card[data-building-id='data-vault']        { --building-color: #9d4edd; --building-color-2: #c77dff; }
+.building-card[data-building-id='neural-forge']      { --building-color: #ffd700; --building-color-2: #fff176; }
+.building-card[data-building-id='comms-tower']       { --building-color: #00ff9f; --building-color-2: #69ffce; }
+.building-card[data-building-id='sentinel']          { --building-color: #ff6b35; --building-color-2: #ffa987; }
+
+/* Powered-on glows per building */
+body[data-city-state='active'] .building-card[data-building-id='songwriting']:hover      { box-shadow: 0 8px 40px rgba(224,64,251,0.35), 0 0 0 1px rgba(224,64,251,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='design-tower']:hover     { box-shadow: 0 8px 40px rgba(255,149,0,0.35), 0 0 0 1px rgba(255,149,0,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='edit-library']:hover     { box-shadow: 0 8px 40px rgba(79,195,247,0.35), 0 0 0 1px rgba(79,195,247,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='research-district']:hover{ box-shadow: 0 8px 40px rgba(105,240,174,0.35), 0 0 0 1px rgba(105,240,174,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='project-lab']:hover      { box-shadow: 0 8px 40px rgba(255,82,82,0.35), 0 0 0 1px rgba(255,82,82,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='memory-vault']:hover     { box-shadow: 0 8px 40px rgba(124,77,255,0.35), 0 0 0 1px rgba(124,77,255,0.1) inset !important; }
+
+/* City grid - increase max buildings per row on wide screens */
+@media (min-width: 1200px) {
+  .city-grid { max-width: 1200px; margin: 0 auto; }
+  .building-card { width: 110px; }
+}
+
+/* Building card hover independent animation */
+.building-card:nth-child(3n+1) { animation-delay: 0.1s; }
+.building-card:nth-child(3n+2) { animation-delay: 0.18s; }
+.building-card:nth-child(3n)   { animation-delay: 0.26s; }
+
+/* Powered ambient bob */
+body[data-city-state='active'] .building-card:nth-child(odd)  { animation: ambient-bob 6s ease-in-out infinite; }
+body[data-city-state='active'] .building-card:nth-child(even) { animation: ambient-bob 6s ease-in-out 3s infinite; }
+@keyframes ambient-bob {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+/* Don't apply when hovering or active */
+.building-card:hover, .building-card.is-active, .building-card.is-routing { animation: none !important; }
