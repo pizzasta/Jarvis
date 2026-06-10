@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════
+   JARVIS AI CITY — main.css
+   Global reset, custom properties, typography, utilities
+═══════════════════════════════════════════════════════════ */
+
+/* ── Custom Properties ─────────────────────────────────── */
+:root {
+  /* Brand palette */
+  --clr-bg-deep:       #04020a;
+  --clr-bg-mid:        #080414;
+  --clr-pink-core:     #ff2d78;
+  --clr-pink-bright:   #ff6bac;
+  --clr-pink-glow:     #ff2d7844;
+  --clr-pink-soft:     #ff2d7820;
+  --clr-cyan:          #00e5ff;
+  --clr-cyan-glow:     #00e5ff33;
+  --clr-violet:        #9d4edd;
+  --clr-violet-glow:   #9d4edd33;
+  --clr-gold:          #ffd700;
+  --clr-white:         #ffffff;
+  --clr-white-dim:     rgba(255,255,255,0.08);
+  --clr-white-mute:    rgba(255,255,255,0.04);
+
+  /* Typography */
+  --font-hud:          'Orbitron', monospace;
+  --font-body:         'Rajdhani', sans-serif;
+
+  /* Spacing scale */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* Z-layers */
+  --z-canvas:     0;
+  --z-bg:         1;
+  --z-skyline:    2;
+  --z-city:       3;
+  --z-orb:        10;
+  --z-overlay:    20;
+  --z-hud:        30;
+
+  /* Transition speeds */
+  --t-fast:   150ms;
+  --t-normal: 300ms;
+  --t-slow:   600ms;
+  --t-epic:   1200ms;
+
+  /* Border radius */
+  --r-sm:  4px;
+  --r-md:  8px;
+  --r-lg:  16px;
+  --r-xl:  24px;
+  --r-full: 9999px;
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--clr-bg-deep);
+  color: var(--clr-white);
+  overflow: hidden;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ── Typography ─────────────────────────────────────────── */
+.t-hud   { font-family: var(--font-hud); }
+.t-body  { font-family: var(--font-body); }
+.t-xs    { font-size: 0.65rem; }
+.t-sm    { font-size: 0.75rem; }
+.t-base  { font-size: 1rem; }
+.t-lg    { font-size: 1.25rem; }
+.t-xl    { font-size: 1.5rem; }
+
+/* ── Utilities ──────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── HUD shared tokens ──────────────────────────────────── */
+.hud-tag {
+  font-family: var(--font-hud);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  color: var(--clr-pink-bright);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.hud-clock {
+  font-family: var(--font-hud);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--clr-cyan);
+}
+
+/* ── Scrollbar (hidden) ─────────────────────────────────── */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ── Focus visible ──────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--clr-pink-bright);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* ── Responsive breakpoints ─────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 12px;
+  }
+}
