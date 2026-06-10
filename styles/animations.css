@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════
+   JARVIS AI CITY — animations.css
+   All keyframes and animation utilities. Animation-safe:
+   respects prefers-reduced-motion for accessibility.
+═══════════════════════════════════════════════════════════ */
+
+/* ── Keyframes ──────────────────────────────────────────── */
+
+/* Breathing ring glow */
+@keyframes ring-breathe {
+  0%, 100% { transform: scale(1);    opacity: 0.6; }
+  50%       { transform: scale(1.04); opacity: 1;   }
+}
+
+/* Orb scanner spin */
+@keyframes orb-spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* Inner core pulse */
+@keyframes core-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.4; }
+  50%       { transform: scale(1.5); opacity: 0.8; }
+}
+
+/* Status dot pulse */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 6px currentColor; }
+  50%       { opacity: 0.4; box-shadow: 0 0 2px currentColor; }
+}
+
+/* Waveform bars */
+@keyframes waveform {
+  0%   { height: 3px; }
+  100% { height: 18px; }
+}
+
+/* Shockwave rings on activation */
+@keyframes shockwave {
+  0%   { width: 0;     height: 0;     opacity: 0.9; }
+  100% { width: 200vw; height: 200vw; opacity: 0;   }
+}
+
+/* Particle float */
+@keyframes float-up {
+  0%   { transform: translateY(0)   scale(1);    opacity: var(--p-opacity, 0.6); }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+
+/* HUD slide in from top */
+@keyframes slide-down {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* HUD slide in from bottom */
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Card appear */
+@keyframes card-appear {
+  from { transform: translateY(24px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* Glow text flicker (HUD logo) */
+@keyframes flicker {
+  0%, 100%       { opacity: 1; }
+  92%, 94%, 96%  { opacity: 0.85; }
+  93%, 95%       { opacity: 1; }
+}
+
+/* Scanline sweep */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Subtle orbit (rings) */
+@keyframes orbit {
+  from { transform: rotate(0deg)   scale(1);    }
+  to   { transform: rotate(360deg) scale(1); }
+}
+
+/* Energy charge on activation */
+@keyframes energy-charge {
+  0%   { box-shadow: 0 0 0px  0px rgba(255,45,120,0); }
+  40%  { box-shadow: 0 0 80px 20px rgba(255,45,120,0.3); }
+  100% { box-shadow: 0 0 40px 10px rgba(255,45,120,0.1); }
+}
+
+/* City power-on text reveal */
+@keyframes text-reveal {
+  from { clip-path: inset(0 100% 0 0); opacity: 0; }
+  to   { clip-path: inset(0 0% 0 0);   opacity: 1; }
+}
+
+/* ── Applied Animations ──────────────────────────────────── */
+
+/* Orb rings stagger orbit */
+.orb-ring--1 { animation: ring-breathe 4s ease-in-out infinite, orbit 20s linear infinite; }
+.orb-ring--2 { animation: ring-breathe 4s ease-in-out 0.5s infinite, orbit 30s linear infinite reverse; }
+.orb-ring--3 { animation: ring-breathe 5s ease-in-out 1s infinite,   orbit 45s linear infinite; }
+.orb-ring--4 { animation: ring-breathe 6s ease-in-out 1.5s infinite, orbit 60s linear infinite reverse; }
+
+/* Logo flicker */
+.hud-logo__text {
+  animation: flicker 8s ease-in-out infinite;
+}
+
+/* Scanline overlay (subtle) */
+.bg-deep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.03) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  animation: scanline 12s linear infinite;
+  opacity: 0.3;
+}
+
+/* On activation, orb gets energy charge */
+body[data-city-state="active"] .orb {
+  animation: energy-charge 1s ease-out forwards;
+}
+
+/* HUD animates in on load */
+.hud-top {
+  animation: slide-down 0.8s cubic-bezier(0.23,1,0.32,1) both;
+}
+.hud-bottom {
+  animation: slide-up 0.8s cubic-bezier(0.23,1,0.32,1) 0.2s both;
+}
+
+/* Building cards stagger in */
+.building-card.is-visible {
+  animation: card-appear 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+/* ── Reduced motion overrides ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep opacity transitions for UX but remove movement */
+  .building-card {
+    transition: opacity var(--t-normal), border-color var(--t-normal), box-shadow var(--t-normal) !important;
+    transform: none !important;
+  }
+
+  .orb {
+    transition: box-shadow var(--t-normal), border-color var(--t-normal) !important;
+    transform: none !important;
+  }
+
+  .city-scene {
+    transition: none !important;
+    transform: none !important;
+  }
+}
