@@ -167,3 +167,74 @@ body[data-city-state="active"] .orb {
     transform: none !important;
   }
 }
+
+
+/* ═══════════════════════════════════════════
+   v3.0 ADDITIONS — voice, buildings, workspace
+═══════════════════════════════════════════ */
+
+/* Orb: speaking state */
+@keyframes orb-speak-scale {
+  0%,100% { transform: scale(1); }
+  25%      { transform: scale(1.04); }
+  75%      { transform: scale(0.97); }
+}
+body[data-orb-state='speaking'] .orb__core {
+  animation: core-pulse 0.6s ease-in-out infinite, orb-speak-scale 1.2s ease-in-out infinite;
+}
+
+/* Orb: listening ripple */
+@keyframes listen-ripple {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+body[data-orb-state='listening'] .orb-ring--1 {
+  animation: listen-ripple 1.2s ease-out infinite !important;
+}
+body[data-orb-state='listening'] .orb-ring--2 {
+  animation: listen-ripple 1.2s ease-out 0.3s infinite !important;
+}
+
+/* Workspace modal entry */
+@keyframes workspace-panel-in {
+  from { opacity:0; transform: scale(0.9) translateY(24px); }
+  to   { opacity:1; transform: scale(1)   translateY(0); }
+}
+
+/* Energy trail spark */
+@keyframes spark-float {
+  0%   { opacity:1; transform: translate(0,0) scale(1); }
+  100% { opacity:0; transform: translate(var(--dx,0),var(--dy,-40px)) scale(0.2); }
+}
+
+/* Orb rings in speaking mode speed up */
+body[data-orb-state='speaking'] .orb-ring--1 { animation: ring-breathe 1.5s ease-in-out infinite, orbit 8s linear infinite !important; }
+body[data-orb-state='speaking'] .orb-ring--2 { animation: ring-breathe 2s ease-in-out infinite, orbit 12s linear infinite reverse !important; }
+
+/* HUD flicker on city power-on */
+@keyframes power-on-sweep {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  12%  { opacity: 0.3; }
+  14%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+body[data-city-state='active'] .hud-top,
+body[data-city-state='active'] .hud-bottom {
+  animation: power-on-sweep 0.8s ease-out both;
+}
+
+/* Building card power-on stagger */
+@keyframes building-power-on {
+  from { opacity:0; transform: translateY(16px) scale(0.96); filter: brightness(0.3); }
+  to   { opacity:1; transform: translateY(0) scale(1);       filter: brightness(1); }
+}
+body[data-city-state='active'] .building-card.is-visible {
+  animation: building-power-on 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+/* Workspace action btn hover ripple */
+@keyframes btn-ripple {
+  from { box-shadow: 0 0 0 0 currentColor; opacity:0.6; }
+  to   { box-shadow: 0 0 0 10px currentColor; opacity:0; }
+}
