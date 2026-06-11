@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
-   ECOSPHERE v2 — Voice Reaction System
-   UX pass: contrast, states, tooltips, a11y, onboarding
+   ECOSPHERE v3 — Voice Reaction System
+   Living density: presence, echoes, whispers, room freq,
+   capsule countdowns, carrier pulse interactions.
 ═══════════════════════════════════════════════════════════ */
 
 /* ── Keyframes ──────────────────────────────────────────── */
@@ -27,7 +28,7 @@
   to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 @keyframes eco-drift-float {
-  0%,100% { transform: translate(0,0)    rotate(0deg); }
+  0%,100% { transform: translate(0,0)     rotate(0deg); }
   33%     { transform: translate(4px,-5px)  rotate(0.6deg); }
   66%     { transform: translate(-3px,3px) rotate(-0.5deg); }
 }
@@ -66,6 +67,37 @@
 @keyframes eco-freq-pulse {
   0%,100% { transform: scaleY(0.2); }
   50%     { transform: scaleY(1); }
+}
+/* Presence entry fade in/out */
+@keyframes eco-presence-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+/* Nearby suggestion */
+@keyframes eco-nearby-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Room hz update flash */
+@keyframes eco-hz-flash {
+  0%   { color: var(--clr-cyan); }
+  40%  { color: rgba(0,229,255,1); text-shadow: 0 0 12px rgba(0,229,255,0.8); }
+  100% { color: rgba(0,229,255,0.75); }
+}
+/* Pulse word float up on send */
+@keyframes eco-pulse-sent-float {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-24px) scale(0.8); }
+}
+/* Carrier badge pulsed ring */
+@keyframes eco-carrier-pulsed {
+  0%   { box-shadow: 0 0 0 0 rgba(0,229,255,0.6); }
+  100% { box-shadow: 0 0 0 8px rgba(0,229,255,0); }
+}
+/* Capsule progress bar glow sweep */
+@keyframes eco-capsule-sweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* ── Body fill ──────────────────────────────────────────── */
@@ -174,7 +206,6 @@
   transition: all var(--t-normal); cursor: pointer; white-space: nowrap;
   position: relative;
 }
-/* Tooltip via data-tip */
 .eco-tab-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute; bottom: calc(100% + 8px); left: 50%;
@@ -229,6 +260,46 @@
 ═══════════════════════════════════════════════════════════ */
 .eco-observatory { display: flex; flex-direction: column; gap: var(--sp-4); padding: var(--sp-4); }
 
+/* ── Room Frequency ─────────────────────────────────────── */
+.eco-room-block {
+  background: rgba(0,229,255,0.03); border: 1px solid rgba(0,229,255,0.14);
+  border-radius: var(--r-md); padding: var(--sp-3);
+  position: relative; overflow: hidden;
+}
+.eco-room-block__header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-1);
+}
+.eco-room-block__label {
+  font-family: var(--font-hud); font-size: 0.5rem; letter-spacing: 0.22em;
+  color: rgba(0,229,255,0.55);
+}
+.eco-room-block__hz {
+  font-family: var(--font-hud); font-size: 0.85rem; letter-spacing: 0.1em;
+  color: rgba(0,229,255,0.75);
+  transition: all 0.5s ease;
+}
+.eco-room-block__hz.is-updating {
+  animation: eco-hz-flash 0.6s ease-out both;
+}
+.eco-room-block__desc {
+  font-size: 0.72rem; color: rgba(255,255,255,0.62); line-height: 1.4;
+  font-style: italic; margin-bottom: var(--sp-2);
+  transition: opacity 0.4s ease;
+}
+.eco-room-block__bar {
+  height: 2px; border-radius: var(--r-full);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,229,255,0.2) 20%,
+    rgba(0,229,255,0.5) 50%,
+    rgba(0,229,255,0.2) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: eco-capsule-sweep 3s linear infinite;
+}
+
 /* Frequency Pulse block */
 .eco-freq-block {
   background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.12);
@@ -281,9 +352,7 @@
   font-family: var(--font-hud); font-size: 0.8rem;
   color: var(--clr-cyan); text-shadow: 0 0 8px rgba(0,229,255,0.4);
 }
-.eco-resonance-item__trend {
-  font-size: 0.65rem; font-weight: 600;
-}
+.eco-resonance-item__trend { font-size: 0.65rem; font-weight: 600; }
 .eco-resonance-item__trend--up   { color: #69f0ae; }
 .eco-resonance-item__trend--down { color: rgba(255,82,82,0.8); }
 .eco-resonance-item__trend--flat { color: rgba(255,255,255,0.4); }
@@ -300,6 +369,11 @@
 .eco-carrier-block__label {
   font-family: var(--font-hud); font-size: 0.55rem; letter-spacing: 0.2em;
   color: rgba(255,45,120,0.85);
+  display: flex; align-items: center; gap: var(--sp-2);
+}
+.eco-carrier-block__hint {
+  font-family: var(--font-body); font-size: 0.54rem; letter-spacing: 0.06em;
+  color: rgba(0,229,255,0.45); font-weight: 400;
 }
 .eco-carrier-legend-btn {
   font-size: 0.58rem; color: rgba(255,255,255,0.45);
@@ -316,7 +390,11 @@
   padding: 4px 10px; border-radius: var(--r-full);
   border: 1px solid transparent; font-size: 0.62rem;
   letter-spacing: 0.06em; position: relative;
+  cursor: pointer; transition: all var(--t-fast);
+  user-select: none;
 }
+.eco-carrier-badge:hover { transform: scale(1.05); }
+.eco-carrier-badge:focus-visible { outline: 2px solid rgba(0,229,255,0.5); outline-offset: 2px; }
 .eco-carrier-badge__dot {
   width: 6px; height: 6px; border-radius: var(--r-full); flex-shrink: 0;
 }
@@ -343,18 +421,31 @@
 .eco-carrier-badge--echo .eco-carrier-badge__status { color: var(--clr-pink-bright); }
 
 .eco-carrier-badge--lost {
-  background: rgba(255,82,82,0.06); border-color: rgba(255,82,82,0.18);
-  opacity: 0.7;
+  background: rgba(255,82,82,0.06); border-color: rgba(255,82,82,0.18); opacity: 0.7;
 }
 .eco-carrier-badge--lost .eco-carrier-badge__dot { background: #ff5252; }
 .eco-carrier-badge--lost .eco-carrier-badge__status { color: rgba(255,82,82,0.8); }
 
 .eco-carrier-badge--soft_focus {
-  background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);
-  opacity: 0.65;
+  background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); opacity: 0.65;
 }
 .eco-carrier-badge--soft_focus .eco-carrier-badge__dot { background: rgba(255,255,255,0.35); }
 .eco-carrier-badge--soft_focus .eco-carrier-badge__status { color: rgba(255,255,255,0.45); }
+
+/* Pulsed state (after sending pulse) */
+.eco-carrier-badge.is-pulsed {
+  animation: eco-carrier-pulsed 0.6s ease-out;
+  border-color: rgba(0,229,255,0.6);
+}
+
+/* Pulse sent dot — floats up and fades */
+.eco-pulse-sent-dot {
+  position: absolute; top: -4px; right: -4px;
+  font-size: 0.6rem; color: var(--clr-cyan);
+  font-family: var(--font-hud); letter-spacing: 0.05em;
+  animation: eco-pulse-sent-float 2.2s ease-out forwards;
+  pointer-events: none;
+}
 
 /* Carrier legend panel */
 .eco-carrier-legend {
@@ -380,6 +471,37 @@
 .eco-carrier-legend__name { font-size: 0.62rem; color: rgba(255,255,255,0.78); }
 .eco-carrier-legend__desc { font-size: 0.58rem; color: rgba(255,255,255,0.45); line-height: 1.4; }
 
+/* ── Pulse Picker ────────────────────────────────────────── */
+.eco-pulse-picker {
+  position: absolute; z-index: 30;
+  background: rgba(4,2,10,0.97); border: 1px solid rgba(0,229,255,0.25);
+  border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3);
+  box-shadow: 0 8px 32px rgba(0,229,255,0.12);
+  opacity: 0; pointer-events: none; transform: translateY(4px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+.eco-pulse-picker.is-open {
+  opacity: 1; pointer-events: auto; transform: translateY(0);
+}
+.eco-pulse-picker__label {
+  font-family: var(--font-hud); font-size: 0.48rem; letter-spacing: 0.18em;
+  color: rgba(0,229,255,0.5); margin-bottom: var(--sp-2);
+}
+.eco-pulse-picker__words {
+  display: flex; gap: var(--sp-1); flex-wrap: wrap;
+}
+.eco-pulse-word {
+  font-family: var(--font-hud); font-size: 0.52rem; letter-spacing: 0.1em;
+  padding: 4px 10px; border-radius: var(--r-full);
+  border: 1px solid rgba(0,229,255,0.2); background: rgba(0,229,255,0.06);
+  color: rgba(0,229,255,0.75); cursor: pointer;
+  transition: all var(--t-fast);
+}
+.eco-pulse-word:hover {
+  background: rgba(0,229,255,0.16); border-color: var(--clr-cyan);
+  color: var(--clr-cyan); transform: scale(1.06);
+}
+
 /* Recent activity */
 .eco-recent-block { border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r-md); padding: var(--sp-3); }
 .eco-recent-block__label {
@@ -397,7 +519,7 @@
 .eco-recent-item__time { font-size: 0.58rem; color: rgba(255,255,255,0.38); white-space: nowrap; }
 
 /* ═══════════════════════════════════════════════════════════
-   SIGNALS TAB (was Feed)
+   SIGNALS TAB
 ═══════════════════════════════════════════════════════════ */
 .eco-feed { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
 
@@ -419,15 +541,12 @@
 }
 .eco-signal-time { font-size: 0.62rem; color: rgba(255,255,255,0.52); }
 
-/* Resonance badge on signal */
 .eco-signal-resonance {
   display: flex; align-items: center; gap: 4px;
-  font-size: 0.58rem; color: rgba(0,229,255,0.7);
-  position: relative;
+  font-size: 0.58rem; color: rgba(0,229,255,0.7); position: relative;
 }
 .eco-signal-resonance__val { font-family: var(--font-hud); font-size: 0.62rem; }
 .eco-signal-resonance__trend { font-size: 0.65rem; }
-/* Tooltip on the resonance badge */
 .eco-signal-resonance[title]:hover::after {
   content: attr(title);
   position: absolute; top: calc(100% + 6px); right: 0;
@@ -451,6 +570,69 @@
   padding: var(--sp-2) var(--sp-3); font-size: 0.84rem;
   color: rgba(255,255,255,0.82); line-height: 1.55; font-style: italic;
 }
+
+/* ── Echo Thread ─────────────────────────────────────────── */
+.eco-echo-thread {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 0 var(--sp-3) var(--sp-2);
+  border-left: none;
+}
+.eco-echo-item {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  padding: 3px var(--sp-2);
+  border-left: 2px solid rgba(255,45,120,0.14);
+  font-size: 0.7rem;
+  opacity: calc(1 - var(--echo-idx, 0) * 0.18);
+  transition: opacity var(--t-normal);
+}
+.eco-echo-item:hover { opacity: 1; }
+.eco-echo-text {
+  color: rgba(255,255,255,0.72); font-style: italic; flex-shrink: 1;
+}
+.eco-echo-sep { color: rgba(255,45,120,0.3); flex-shrink: 0; }
+.eco-echo-author {
+  font-size: 0.6rem; color: rgba(255,45,120,0.58); white-space: nowrap; flex-shrink: 0;
+}
+.eco-echo-time {
+  font-size: 0.54rem; color: rgba(255,255,255,0.28); white-space: nowrap;
+  margin-left: auto; flex-shrink: 0;
+}
+.eco-echo-more {
+  font-size: 0.58rem; color: rgba(255,45,120,0.45); padding: 2px var(--sp-2);
+  background: transparent; border: none; cursor: default;
+  letter-spacing: 0.06em;
+}
+
+/* ── Presence row ────────────────────────────────────────── */
+.eco-presence-row {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: 0 var(--sp-3) var(--sp-2);
+  min-height: 20px; flex-wrap: wrap;
+}
+.eco-presence-dot {
+  width: 5px; height: 5px; border-radius: var(--r-full);
+  background: rgba(255,255,255,0.2); flex-shrink: 0;
+  transition: background var(--t-normal), box-shadow var(--t-normal);
+}
+.eco-presence-dot.is-active {
+  background: rgba(0,229,255,0.7); box-shadow: 0 0 6px rgba(0,229,255,0.5);
+  animation: eco-carrier-pulse 2s ease-in-out infinite;
+  color: var(--clr-cyan);
+}
+.eco-presence-count {
+  font-size: 0.6rem; color: rgba(255,255,255,0.38); letter-spacing: 0.06em;
+}
+.eco-presence-feed {
+  display: flex; flex-wrap: wrap; gap: var(--sp-1); flex: 1;
+}
+.eco-presence-entry {
+  font-size: 0.6rem; color: rgba(0,229,255,0.52);
+  animation: eco-presence-in 0.3s ease-out both;
+  transition: opacity 0.8s ease;
+}
+.eco-presence-entry.is-fading { opacity: 0; }
+
+/* ── Signal footer ───────────────────────────────────────── */
 .eco-signal-footer {
   display: flex; align-items: center; gap: var(--sp-2);
   padding: 0 var(--sp-3) var(--sp-3); flex-wrap: wrap;
@@ -487,12 +669,71 @@
   position: relative; overflow: hidden;
 }
 .eco-mini-waveform-pill::after {
-  content: '';  position: absolute; inset: 0;
+  content: ''; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, rgba(255,255,255,0.28) 0px, rgba(255,255,255,0.28) 2px, transparent 2px, transparent 4px);
 }
 .eco-reaction-count { font-family: var(--font-hud); font-size: 0.55rem; color: rgba(255,255,255,0.55); white-space: nowrap; flex-shrink: 0; }
 .eco-chevron { width: 12px; height: 12px; color: inherit; flex-shrink: 0; transition: transform var(--t-fast); }
 .eco-chevron.is-flipped { transform: rotate(180deg); }
+
+/* ── Whisper input ───────────────────────────────────────── */
+.eco-whisper-input-wrap {
+  flex: 1; min-width: 80px;
+}
+.eco-whisper-input {
+  width: 100%; background: transparent;
+  border: none; border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.62); font-size: 0.68rem;
+  font-family: var(--font-body); padding: 2px 4px;
+  outline: none; transition: border-color var(--t-fast);
+  letter-spacing: 0.02em;
+}
+.eco-whisper-input::placeholder { color: rgba(255,255,255,0.22); font-style: italic; }
+.eco-whisper-input:focus { border-bottom-color: rgba(157,78,221,0.4); color: rgba(255,255,255,0.82); }
+
+/* Whisper list */
+.eco-whisper-list {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 0 var(--sp-3) var(--sp-2);
+}
+.eco-whisper-item {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  padding: 3px 0;
+  font-size: 0.68rem;
+  transition: opacity 0.8s ease;
+}
+.eco-whisper-item.is-fading { opacity: 0; }
+.eco-whisper-text { color: rgba(157,78,221,0.8); font-style: italic; flex: 1; }
+.eco-whisper-timer { font-size: 0.52rem; color: rgba(255,255,255,0.25); white-space: nowrap; flex-shrink: 0; }
+
+/* ── After-playback suggestion ───────────────────────────── */
+.eco-nearby-suggestion {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid rgba(0,229,255,0.08);
+  background: rgba(0,229,255,0.03);
+  animation: eco-nearby-in 0.4s ease-out both;
+  transition: opacity 0.6s ease;
+  flex-wrap: wrap;
+}
+.eco-nearby-suggestion.is-fading { opacity: 0; }
+.eco-nearby-label {
+  font-family: var(--font-hud); font-size: 0.48rem; letter-spacing: 0.16em;
+  color: rgba(0,229,255,0.45); white-space: nowrap;
+}
+.eco-nearby-links { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.eco-nearby-link {
+  font-family: var(--font-hud); font-size: 0.5rem; letter-spacing: 0.12em;
+  padding: 3px 9px; border: 1px solid rgba(0,229,255,0.18);
+  border-radius: var(--r-full); color: rgba(0,229,255,0.65);
+  background: transparent; cursor: pointer; transition: all var(--t-fast);
+  display: flex; align-items: center; gap: 5px;
+}
+.eco-nearby-link:hover {
+  background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.35);
+  color: var(--clr-cyan);
+}
+.eco-nearby-score { color: rgba(0,229,255,0.45); font-size: 0.46rem; }
 
 /* ── Reaction Stack ──────────────────────────────────────── */
 .eco-reaction-stack {
@@ -503,7 +744,7 @@
 .eco-reaction-stack:not(.eco-reaction-stack--collapsed) { display: flex; }
 .eco-stack-empty { font-size: 0.68rem; color: rgba(255,255,255,0.48); padding: var(--sp-2) 0; text-align: center; }
 
-/* ── Reaction Pill (open state) ──────────────────────────── */
+/* ── Reaction Pill ───────────────────────────────────────── */
 .eco-reaction-pill {
   display: flex; align-items: center; gap: var(--sp-2);
   padding: 6px 8px; background: rgba(255,45,120,0.05);
@@ -520,14 +761,13 @@
 .eco-reaction-pill.is-drifted { opacity: 0.52; }
 .eco-reaction-pill.is-drifting { animation: eco-drifting-away 1.2s ease-out forwards; }
 
-/* Glow pulse for playing state */
 .eco-rxn-glow-pulse {
   position: absolute; inset: 0; border-radius: inherit;
   background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,229,255,0.09) 0%, transparent 70%);
   pointer-events: none; animation: eco-reaction-glow 1.8s ease-in-out infinite;
 }
 
-/* ── Sealed pill ─────────────────────────────────────────── */
+/* Sealed pill */
 .eco-reaction-pill--sealed {
   background: rgba(157,78,221,0.06); border-color: rgba(157,78,221,0.2);
 }
@@ -547,12 +787,11 @@
   color: rgba(157,78,221,0.85);
 }
 .eco-sealed-waveform { filter: blur(4px); opacity: 0.35; pointer-events: none; }
-
 .eco-reaction-pill--sealed.is-unsealing .eco-sealed-waveform {
   animation: eco-unseal-reveal 0.5s ease-out both;
 }
 
-/* State tag */
+/* State tags */
 .eco-state-tag {
   font-family: var(--font-hud); font-size: 0.44rem; letter-spacing: 0.16em;
   padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
@@ -560,18 +799,11 @@
 .eco-state-tag--sealed   { background: rgba(157,78,221,0.15); color: rgba(157,78,221,0.9); border: 1px solid rgba(157,78,221,0.25); }
 .eco-state-tag--archived { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.1); }
 .eco-state-tag--private  { background: rgba(255,215,0,0.08);  color: rgba(255,215,0,0.7);   border: 1px solid rgba(255,215,0,0.2); }
-.eco-state-tag--lost     { background: rgba(255,82,82,0.08);  color: rgba(255,82,82,0.75);   border: 1px solid rgba(255,82,82,0.2); }
+.eco-state-tag--lost     { background: rgba(255,82,82,0.08);  color: rgba(255,82,82,0.75);  border: 1px solid rgba(255,82,82,0.2); }
 
-/* Archived dimming */
 .eco-reaction-pill--archived { opacity: 0.62; }
 .eco-reaction-pill--archived:hover { opacity: 0.82; }
-
-/* Private lock */
-.eco-reaction-pill--private {
-  background: rgba(255,215,0,0.04); border-color: rgba(255,215,0,0.14);
-}
-
-/* Lost (unplayable) */
+.eco-reaction-pill--private { background: rgba(255,215,0,0.04); border-color: rgba(255,215,0,0.14); }
 .eco-reaction-pill--lost {
   background: rgba(255,82,82,0.05); border-color: rgba(255,82,82,0.15);
   pointer-events: none; opacity: 0.55;
@@ -626,10 +858,8 @@
   justify-content: center; cursor: pointer;
   transition: color var(--t-fast), transform var(--t-fast); padding: 0;
 }
-.eco-rxn-fav-btn svg,
-.eco-rxn-drift-btn svg,
-.eco-rxn-delete-btn svg,
-.eco-rxn-archive-btn svg { width: 12px; height: 12px; }
+.eco-rxn-fav-btn svg, .eco-rxn-drift-btn svg,
+.eco-rxn-delete-btn svg, .eco-rxn-archive-btn svg { width: 12px; height: 12px; }
 .eco-rxn-fav-btn:hover    { color: var(--clr-pink-bright);    transform: scale(1.18); }
 .eco-rxn-fav-btn.is-fav   { color: var(--clr-pink-core); }
 .eco-rxn-drift-btn:hover  { color: var(--clr-cyan);           transform: scale(1.18); }
@@ -687,7 +917,6 @@
 .eco-modal__hint { font-size: 0.78rem; color: rgba(255,255,255,0.65); text-align: center; }
 .eco-modal__hint--sm { font-size: 0.67rem; }
 
-/* Filter row */
 .eco-filter-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; justify-content: center; }
 .eco-filter-label { font-size: 0.62rem; color: rgba(255,255,255,0.42); letter-spacing: 0.1em; }
 .eco-filter-btn {
@@ -699,20 +928,16 @@
 .eco-filter-btn:hover { color: rgba(255,255,255,0.78); }
 .eco-filter-btn.is-active { color: var(--clr-violet); border-color: var(--clr-violet); background: rgba(157,78,221,0.1); }
 
-/* Options row (anon + seal) */
 .eco-options-row { display: flex; gap: var(--sp-4); align-items: center; justify-content: center; flex-wrap: wrap; }
-.eco-anon-label,
-.eco-seal-label {
+.eco-anon-label, .eco-seal-label {
   display: flex; align-items: center; gap: 6px;
   font-size: 0.7rem; color: rgba(255,255,255,0.52); cursor: pointer; user-select: none;
 }
-.eco-anon-label span,
-.eco-seal-label span { display: flex; flex-direction: column; gap: 1px; }
+.eco-anon-label span, .eco-seal-label span { display: flex; flex-direction: column; gap: 1px; }
 .eco-seal-label__hint { font-size: 0.58rem; color: rgba(157,78,221,0.6); }
 .eco-anon-check, .eco-seal-check { width: 14px; height: 14px; accent-color: var(--clr-pink-core); cursor: pointer; }
 .eco-seal-check { accent-color: var(--clr-violet); }
 
-/* Record button */
 .eco-record-btn {
   position: relative; width: 88px; height: 88px; border-radius: var(--r-full);
   border: 2px solid rgba(255,45,120,0.52);
@@ -736,14 +961,12 @@
 }
 .eco-record-btn__ring--2 { animation-delay: 1s; }
 
-/* Mic permission hint */
 .eco-mic-hint {
   font-size: 0.62rem; color: rgba(255,255,255,0.4); text-align: center;
   display: flex; align-items: center; gap: 4px; justify-content: center;
 }
 .eco-mic-hint svg { width: 12px; height: 12px; opacity: 0.55; flex-shrink: 0; }
 
-/* Recording screen */
 .eco-recording-indicator { display: flex; align-items: center; gap: var(--sp-2); }
 .eco-recording-dot {
   width: 8px; height: 8px; border-radius: var(--r-full); background: #ff5252;
@@ -769,7 +992,6 @@
 .eco-stop-btn:hover { background: rgba(255,82,82,0.22); border-color: #ff5252; transform: scale(1.06); }
 .eco-stop-btn__inner { width: 18px; height: 18px; border-radius: 3px; background: currentColor; }
 
-/* Preview screen */
 .eco-preview-waveform-wrap { position: relative; width: 100%; max-width: 280px; }
 .eco-preview-waveform-canvas {
   display: block; width: 100%; height: 60px;
@@ -793,7 +1015,6 @@
 
 .eco-preview-actions { display: flex; gap: var(--sp-2); width: 100%; max-width: 300px; flex-wrap: wrap; }
 
-/* Buttons */
 .eco-btn {
   font-family: var(--font-hud); font-size: 0.5rem; letter-spacing: 0.18em;
   padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm);
@@ -839,8 +1060,37 @@
 }
 .eco-capsules-section-label:first-child { margin-top: 0; }
 
-/* ── Favorites ───────────────────────────────────────────── */
-.eco-favorites { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); }
+/* Forming capsule */
+.eco-forming-capsule {
+  background: rgba(0,229,255,0.03); border: 1px solid rgba(0,229,255,0.1);
+  border-radius: var(--r-md); padding: var(--sp-3);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  animation: eco-pill-appear 0.3s ease both;
+}
+.eco-forming-capsule__header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2);
+}
+.eco-forming-capsule__title {
+  font-family: var(--font-hud); font-size: 0.58rem; letter-spacing: 0.14em;
+  color: rgba(0,229,255,0.7);
+}
+.eco-forming-capsule__signal {
+  font-size: 0.54rem; color: rgba(255,255,255,0.35);
+}
+.eco-capsule-progress-wrap {
+  height: 3px; background: rgba(255,255,255,0.06); border-radius: var(--r-full); overflow: hidden;
+}
+.eco-capsule-progress-bar {
+  height: 100%; border-radius: var(--r-full);
+  background: linear-gradient(90deg, rgba(0,229,255,0.3), rgba(0,229,255,0.6));
+  background-size: 200% 100%;
+  animation: eco-capsule-sweep 2.4s linear infinite;
+  min-width: 4px;
+}
+.eco-capsule-countdown {
+  font-family: var(--font-hud); font-size: 0.52rem; letter-spacing: 0.12em;
+  color: rgba(0,229,255,0.5);
+}
 
 /* ── Drift Field ─────────────────────────────────────────── */
 .eco-drift { height: 100%; min-height: 300px; }
@@ -868,7 +1118,6 @@
   padding: var(--sp-4);
 }
 .eco-onboarding[hidden] { display: none; }
-
 .eco-onboarding__panel {
   background: rgba(8,4,20,0.98); border: 1px solid rgba(0,229,255,0.2);
   border-radius: var(--r-xl); padding: var(--sp-6); max-width: 340px; width: 100%;
@@ -881,7 +1130,6 @@
   margin-bottom: var(--sp-1);
 }
 .eco-onboarding__sub { font-size: 0.72rem; color: rgba(255,255,255,0.52); margin-bottom: var(--sp-4); }
-
 .eco-onboarding__legend { display: flex; flex-direction: column; gap: var(--sp-3); margin-bottom: var(--sp-5); }
 .eco-onboard-row { display: flex; gap: var(--sp-3); align-items: flex-start; }
 .eco-onboard-verb {
@@ -891,10 +1139,9 @@
 }
 .eco-onboard-verb--react   { background: rgba(255,45,120,0.15); color: var(--clr-pink-bright); border: 1px solid rgba(255,45,120,0.3); }
 .eco-onboard-verb--seal    { background: rgba(157,78,221,0.12); color: rgba(157,78,221,0.9);   border: 1px solid rgba(157,78,221,0.25); }
-.eco-onboard-verb--drift   { background: rgba(0,229,255,0.08);  color: var(--clr-cyan);         border: 1px solid rgba(0,229,255,0.2); }
+.eco-onboard-verb--drift   { background: rgba(0,229,255,0.08);  color: var(--clr-cyan);        border: 1px solid rgba(0,229,255,0.2); }
 .eco-onboard-verb--capsule { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.1); }
 .eco-onboard-desc { font-size: 0.7rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
-
 .eco-onboarding__close {
   width: 100%; font-family: var(--font-hud); font-size: 0.58rem; letter-spacing: 0.2em;
   padding: var(--sp-3); border-radius: var(--r-md);
@@ -929,6 +1176,7 @@
   .eco-rxn-meta { display: none; }
   .eco-tabs { gap: 0; }
   .eco-tab-btn { padding: var(--sp-2); font-size: 0.44rem; }
+  .eco-whisper-input-wrap { display: none; }
 }
 
 /* ── Reduced motion ──────────────────────────────────────── */
@@ -936,5 +1184,6 @@
   .eco-record-btn, .eco-record-btn__ring, .eco-wave,
   .eco-signal-pulse::after, .eco-drift-fragment,
   .eco-reaction-pill.is-playing, .eco-carrier-badge--pulse .eco-carrier-badge__dot,
-  .eco-freq-bar { animation: none !important; }
+  .eco-freq-bar, .eco-room-block__bar, .eco-capsule-progress-bar,
+  .eco-presence-dot.is-active { animation: none !important; }
 }
