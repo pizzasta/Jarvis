@@ -13,6 +13,7 @@ const EcosphereVR = (() => {
   const SK_REACTIONS = 'eco_reactions';
   const SK_UNSENT    = 'eco_unsent';
   const SK_SEEN      = 'eco_onboard_seen';
+  const SK_FADED     = 'eco_faded';
   const MAX_REC_MS   = 5000;
   const CLR_PINK     = '#ff2d78';
   const CLR_PINK_DIM = 'rgba(255,45,120,0.45)';
@@ -40,6 +41,50 @@ const EcosphereVR = (() => {
   ];
 
   const PULSE_WORDS = ['felt', 'same', 'still', 'here', '…'];
+
+  // ─── V4 CONSTANTS ─────────────────────────────────────────
+  const GHOST_PHRASES = [
+    { conf: 87, text: '“i don’t know if this is grief or relief”' },
+    { conf: 72, text: '“i keep almost saying something then stopping”' },
+    { conf: 91, text: '“nothing changed but everything feels different”' },
+    { conf: 64, text: '“i came back to check on something that doesn’t need me”' },
+    { conf: 83, text: '“some frequencies are just a recording of missing someone”' },
+    { conf: 78, text: '“i pressed record and then forgot what i wanted to say”' },
+    { conf: 95, text: '“this one stays in my chest”' },
+    { conf: 69, text: '“i played it back four times just to hear the breath at the start”' },
+  ];
+
+  const PHANTOM_WHISPERS = [
+    'i don’t remember logging on',
+    'this frequency was here before i arrived',
+    'something kept me on this signal longer than intended',
+    'i’ve heard this before. i don’t know when.',
+    'there is static here that feels like recognition',
+    'i stayed for 11 minutes before noticing',
+    'the room frequency matched something i can’t name',
+    'i came back. i’m not sure why.',
+  ];
+
+  const FUTURE_SIGNALS = [
+    { id: 'future-1', content: 'the thing you almost said tonight',         resonance: 91 },
+    { id: 'future-2', content: 'a frequency that hasn’t arrived yet',  resonance: 77 },
+    { id: 'future-3', content: 'something you’ll understand tomorrow', resonance: 84 },
+  ];
+
+  const CO_DRIFT_RESPONSES = [
+    'drifting into the low register — a sense of weight without cause',
+    'something loosened in the upper chest — not quite relief',
+    'the frequency created a stillness. brief but complete.',
+    'an awareness of not being entirely here. present, but elsewhere.',
+    'a pull toward something unnamed — forward, or inward',
+  ];
+
+  const UNLISTENABLE_CHECKS = [
+    'do you feel different today?',
+    'has anything shifted since you last opened this?',
+    'some frequencies leave no trace you can name. notice anything?',
+    'your body knows things your ears cannot confirm.',
+  ];
 
   // ─── CARRIER STATUS LEGEND ────────────────────────────────
   const CARRIER_STATUS = {
@@ -154,12 +199,19 @@ const EcosphereVR = (() => {
     roomDescIdx: 0,
     presenceCounts: {},   // signalId -> number
     activePulsePicker: null,
+    // v4: futuristic features
+    faded: new Set(),
+    reverseObs: false,
+    coDriftActive: false,
+    coDriftPhase: null,
   };
 
   // ─── LIFECYCLE INTERVALS ──────────────────────────────────
   let _presenceIntervals = {};
   let _roomInterval = null;
   let _capsuleInterval = null;
+  let _capsuleCheckTimeout = null;
+  let _phantomInterval = null;
 
   // ─── STORAGE ──────────────────────────────────────────────
   const Store = {
@@ -174,6 +226,12 @@ const EcosphereVR = (() => {
     saveUnsent(u)    { try { localStorage.setItem(SK_UNSENT, JSON.stringify(u)); } catch(e) {} },
     onboardSeen()    { return !!localStorage.getItem(SK_SEEN); },
     markOnboardSeen(){ try { localStorage.setItem(SK_SEEN, '1'); } catch(e) {} },
+    loadFaded() {
+      try { return new Set(JSON.parse(localStorage.getItem(SK_FADED)) || []); } catch(e) { return new Set(); }
+    },
+    saveFaded(set) {
+      try { localStorage.setItem(SK_FADED, JSON.stringify([...set])); } catch(e) {}
+    },
   };
 
   // ─── WAVEFORM ENGINE ──────────────────────────────────────
@@ -338,6 +396,7 @@ const EcosphereVR = (() => {
           }
         }
         showNearbySuggestion(signalId);
+        showFadeButton(signalId);
       };
       audio.onerror = () => { UI.setPlayState(rxn.id, false); _s.activePlayer = null; UI.toast('Could not play this reaction.'); };
       _s.activePlayer = { audio, reactionId: rxn.id, signalId, raf: null };
@@ -428,6 +487,245 @@ const EcosphereVR = (() => {
     },
   };
 
+  // ─── PREDICTIVE ECHO ──────────────────────────────────────
+  const PredictiveEcho = {
+    _interval: null,
+    _idx: 0,
+    start() {
+      this._idx = Math.floor(Math.random() * GHOST_PHRASES.length);
+      this._show();
+      this._interval = setInterval(() => {
+        this._idx = (this._idx + 1) % GHOST_PHRASES.length;
+        this._show();
+      }, 7000);
+    },
+    stop() {
+      if (this._interval) { clearInterval(this._interval); this._interval = null; }
+      const el = document.getElementById('eco-predictive-echo');
+      if (el) el.classList.remove('is-visible');
+    },
+    _show() {
+      const phrase = GHOST_PHRASES[this._idx];
+      const el = document.getElementById('eco-predictive-echo');
+      if (!el) return;
+      el.classList.remove('is-visible');
+      setTimeout(() => {
+        const textEl = el.querySelector('.eco-predictive-text');
+        const confEl = el.querySelector('.eco-predictive-conf');
+        if (textEl) textEl.textContent = phrase.text;
+        if (confEl) confEl.textContent = phrase.conf + '% match at this frequency';
+        el.classList.add('is-visible');
+      }, 200);
+    },
+    next() { this._idx = (this._idx + 1) % GHOST_PHRASES.length; this._show(); },
+    accept(text) {
+      UI.toast('echo logged · ' + text.replace(/[""]/g, '').slice(0, 28) + '…');
+      this.stop();
+    },
+  };
+
+  // ─── PHANTOM CARRIER ──────────────────────────────────────
+  const PhantomCarrier = {
+    _idx: 0,
+    start() {
+      if (_phantomInterval) return;
+      setTimeout(() => this._whisper(), 9000);
+      _phantomInterval = setInterval(() => this._whisper(), 28000 + Math.random() * 14000);
+    },
+    stop() {
+      if (_phantomInterval) { clearInterval(_phantomInterval); _phantomInterval = null; }
+    },
+    _whisper() {
+      const msg = PHANTOM_WHISPERS[this._idx % PHANTOM_WHISPERS.length];
+      this._idx++;
+      const el = document.getElementById('eco-phantom-whisper');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('is-visible');
+      setTimeout(() => el.classList.remove('is-visible'), 5200);
+    },
+  };
+
+  // ─── CO-DRIFT HYPNOSIS ────────────────────────────────────
+  const CoDrift = {
+    _timeout: null,
+    start() {
+      if (_s.coDriftActive) return;
+      _s.coDriftActive = true; _s.coDriftPhase = 'syncing';
+      this._showOverlay('syncing');
+      this._timeout = setTimeout(() => {
+        _s.coDriftPhase = 'ask'; this._showOverlay('ask');
+      }, 15000);
+    },
+    stop() {
+      _s.coDriftActive = false; _s.coDriftPhase = null;
+      if (this._timeout) { clearTimeout(this._timeout); this._timeout = null; }
+      const el = document.getElementById('eco-codrift-overlay');
+      if (el) el.remove();
+    },
+    submit(text) {
+      _s.coDriftPhase = 'result';
+      const response = CO_DRIFT_RESPONSES[Math.floor(Math.random() * CO_DRIFT_RESPONSES.length)];
+      this._showOverlay('result', { userText: text, partnerText: response });
+      if (this._timeout) { clearTimeout(this._timeout); this._timeout = null; }
+    },
+    _showOverlay(phase, data) {
+      let el = document.getElementById('eco-codrift-overlay');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'eco-codrift-overlay'; el.id = 'eco-codrift-overlay';
+        const ws = document.getElementById('eco-workspace');
+        if (ws) ws.appendChild(el); else return;
+      }
+      if (phase === 'syncing') {
+        const partnerStartHz = (37 + Math.random() * 2 - 1).toFixed(1);
+        el.innerHTML = `<div class="eco-codrift-inner">
+          <div class="eco-codrift-sync-anim" aria-hidden="true">
+            <div class="eco-codrift-hz">${_s.roomHz.toFixed(1)} Hz</div>
+            <div class="eco-codrift-bridge"></div>
+            <div class="eco-codrift-hz is-partner" id="eco-codrift-hz2">${partnerStartHz} Hz</div>
+          </div>
+          <p class="eco-codrift-label">synchronising with a nearby drifter…</p>
+          <p class="eco-codrift-sublabel">hold still while frequencies align</p>
+          <button class="eco-codrift-cancel" id="eco-codrift-cancel">cancel</button>
+        </div>`;
+        el.querySelector('#eco-codrift-cancel')?.addEventListener('click', () => CoDrift.stop());
+        let tick = 0;
+        const iv = setInterval(() => {
+          tick++;
+          const hz2El = document.getElementById('eco-codrift-hz2');
+          if (!hz2El || !document.contains(hz2El)) { clearInterval(iv); return; }
+          const cur = parseFloat(hz2El.textContent);
+          const nxt = cur + (_s.roomHz - cur) * 0.12;
+          hz2El.textContent = nxt.toFixed(1) + ' Hz';
+          if (Math.abs(nxt - _s.roomHz) < 0.05 || tick > 50) {
+            hz2El.textContent = _s.roomHz.toFixed(1) + ' Hz';
+            hz2El.classList.add('is-synced'); clearInterval(iv);
+          }
+        }, 300);
+      } else if (phase === 'ask') {
+        el.innerHTML = `<div class="eco-codrift-inner">
+          <p class="eco-codrift-label">frequencies aligned.</p>
+          <p class="eco-codrift-sublabel">what did you feel during the drift?</p>
+          <textarea class="eco-codrift-input" id="eco-codrift-input" placeholder="describe the sensation…" maxlength="200" rows="3"></textarea>
+          <button class="eco-codrift-submit" id="eco-codrift-submit">submit</button>
+          <button class="eco-codrift-cancel" id="eco-codrift-cancel">close</button>
+        </div>`;
+        el.querySelector('#eco-codrift-submit')?.addEventListener('click', () => {
+          const inp = document.getElementById('eco-codrift-input');
+          CoDrift.submit(inp?.value || '');
+        });
+        el.querySelector('#eco-codrift-cancel')?.addEventListener('click', () => CoDrift.stop());
+        setTimeout(() => document.getElementById('eco-codrift-input')?.focus(), 50);
+      } else if (phase === 'result') {
+        const simPct = 62 + Math.floor(Math.random() * 28);
+        el.innerHTML = `<div class="eco-codrift-inner">
+          <p class="eco-codrift-label">your partner described:</p>
+          <p class="eco-codrift-partner-response">"${_escapeHtml(data.partnerText)}"</p>
+          <p class="eco-codrift-sublabel">similarity score</p>
+          <div class="eco-codrift-similarity">
+            <div class="eco-codrift-sim-bar" style="--sim:${simPct}%"></div>
+            <span class="eco-codrift-sim-pct">${simPct}%</span>
+          </div>
+          <p class="eco-codrift-footer">shared experience across ${1 + Math.floor(Math.random() * 3)} Hz of separation</p>
+          <button class="eco-codrift-cancel" id="eco-codrift-cancel">close</button>
+        </div>`;
+        el.querySelector('#eco-codrift-cancel')?.addEventListener('click', () => CoDrift.stop());
+      }
+    },
+  };
+
+  // ─── ATTENTION TRAILS ─────────────────────────────────────
+  const AttentionTrails = {
+    _raf: null,
+    _agents: [],
+    start(canvas) {
+      if (!canvas) return;
+      this.stop();
+      const w = canvas.offsetWidth || 380;
+      const h = canvas.offsetHeight || 110;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+      this._agents = Array.from({ length: 12 }, () => ({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.9, vy: (Math.random() - 0.5) * 0.55,
+        hue: Math.random() > 0.5 ? 186 : 320,
+        alpha: 0.3 + Math.random() * 0.5,
+        size: 2 + Math.random() * 2.5,
+        trail: [],
+      }));
+      const tick = () => {
+        if (!document.contains(canvas)) { this.stop(); return; }
+        ctx.clearRect(0, 0, w, h);
+        this._agents.forEach(a => {
+          a.vx += (Math.random() - 0.5) * 0.16;
+          a.vy += (Math.random() - 0.5) * 0.1;
+          const spd = Math.hypot(a.vx, a.vy);
+          if (spd > 1.3) { a.vx /= spd * 0.9; a.vy /= spd * 0.9; }
+          a.x = Math.max(0, Math.min(w, a.x + a.vx));
+          a.y = Math.max(0, Math.min(h, a.y + a.vy));
+          if (a.x <= 0 || a.x >= w) a.vx *= -1;
+          if (a.y <= 0 || a.y >= h) a.vy *= -1;
+          a.trail.push({ x: a.x, y: a.y });
+          if (a.trail.length > 22) a.trail.shift();
+          if (a.trail.length > 1) {
+            for (let i = 1; i < a.trail.length; i++) {
+              const t = i / a.trail.length;
+              ctx.beginPath();
+              ctx.moveTo(a.trail[i-1].x, a.trail[i-1].y);
+              ctx.lineTo(a.trail[i].x, a.trail[i].y);
+              ctx.strokeStyle = `hsla(${a.hue},100%,65%,${t * a.alpha * 0.35})`;
+              ctx.lineWidth = a.size * t * 0.5;
+              ctx.stroke();
+            }
+          }
+          ctx.beginPath();
+          ctx.arc(a.x, a.y, a.size * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${a.hue},100%,70%,${a.alpha})`;
+          ctx.shadowBlur = 7; ctx.shadowColor = `hsla(${a.hue},100%,60%,0.5)`;
+          ctx.fill(); ctx.shadowBlur = 0;
+        });
+        this._raf = requestAnimationFrame(tick);
+      };
+      tick();
+    },
+    stop() {
+      if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; }
+      this._agents = [];
+    },
+  };
+
+  // ─── STATIC BLOOM ─────────────────────────────────────────
+  const StaticBloom = {
+    draw(canvas, seed) {
+      if (!canvas) return;
+      const w = canvas.offsetWidth || 280;
+      const h = canvas.offsetHeight || 64;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+      const img = ctx.createImageData(w, h);
+      const d = img.data;
+      let s = (seed || 12345) & 0x7fffffff;
+      const rand = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+      const noise = (x, y) => { const v = Math.sin(x * 0.37 + y * 0.29 + s * 0.0001) * 43758.5453; return (v - Math.floor(v)); };
+      const hasSeed = seed > 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const n = noise(x / 4, y / 3);
+          const v = rand() * 0.18 + n * 0.42;
+          const idx = (y * w + x) * 4;
+          d[idx]   = Math.min(255, v * 100 + (hasSeed ? v * 80  : v * 20));
+          d[idx+1] = Math.min(255, v * 110 + (hasSeed ? v * 140 : v * 50));
+          d[idx+2] = Math.min(255, v * 140 + (hasSeed ? v * 180 : v * 80));
+          d[idx+3] = Math.min(255, 40 + v * 100);
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    },
+  };
+
   // ─── HELPERS ──────────────────────────────────────────────
   function _blobToBase64(blob) {
     return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
@@ -473,6 +771,57 @@ const EcosphereVR = (() => {
   function _trendIcon(t) { return t === 'up' ? '↑' : t === 'down' ? '↓' : '→'; }
   function _trendClass(t) { return t === 'up' ? 'up' : t === 'down' ? 'down' : 'flat'; }
 
+  // ─── FADE SIGNAL ──────────────────────────────────────────
+  function fadeSignal(signalId) {
+    _s.faded.add(signalId);
+    Store.saveFaded(_s.faded);
+    const card = document.querySelector(`.eco-signal-card[data-signal-id="${signalId}"]`);
+    if (card) {
+      const content  = card.querySelector('.eco-signal-content');
+      const echo     = card.querySelector('.eco-echo-thread');
+      const presence = card.querySelector('.eco-presence-row');
+      const footer   = card.querySelector('.eco-signal-footer');
+      const wrapRow  = card.querySelector('.eco-whisper-input-wrap');
+      const wlist    = card.querySelector('.eco-whisper-list');
+      if (content)  { content.innerHTML = '<span class="eco-faded-placeholder">[something was here]</span>'; content.classList.add('is-faded'); }
+      if (echo)     echo.remove();
+      if (presence) presence.remove();
+      if (footer)   { footer.style.opacity = '0.28'; footer.style.pointerEvents = 'none'; }
+      if (wrapRow)  wrapRow.remove();
+      if (wlist)    wlist.remove();
+    }
+    const fadeEl   = document.getElementById('eco-fade-prompt-' + signalId);
+    if (fadeEl) fadeEl.remove();
+    const nearbyEl = document.getElementById('eco-nearby-' + signalId);
+    if (nearbyEl) nearbyEl.remove();
+    UI.toast('memory faded · [something was here]');
+  }
+
+  function showFadeButton(signalId) {
+    if (_s.faded.has(signalId)) return;
+    if (document.getElementById('eco-fade-prompt-' + signalId)) return;
+    const stack = document.getElementById('eco-stack-' + signalId);
+    if (!stack) return;
+    const el = document.createElement('div');
+    el.className = 'eco-fade-prompt'; el.id = 'eco-fade-prompt-' + signalId;
+    el.innerHTML = `<span class="eco-fade-prompt__label">memory complete.</span>
+      <button class="eco-fade-btn" aria-label="Permanently fade this signal from your view">fade this memory</button>`;
+    stack.before(el);
+    el.querySelector('.eco-fade-btn').addEventListener('click', () => fadeSignal(signalId));
+    setTimeout(() => { if (el.parentNode) { el.classList.add('is-fading'); setTimeout(() => { if (el.parentNode) el.remove(); }, 700); } }, 12000);
+  }
+
+  function _isDriftHour() {
+    const n = new Date(), h = n.getHours(), m = n.getMinutes();
+    return (h === 3 && m === 33) || (h === 23 && m === 11) || (h === 2 && m === 22) || (h === 4 && m === 44);
+  }
+
+  function _staticSeed() {
+    const plays = _allRxns().reduce((s, r) => s + (r.replays || 0), 0);
+    const favs  = _allRxns().filter(r => r.isFavorite).length;
+    return plays * 1000 + favs * 333 + _s.signals.length * 17;
+  }
+
   // ─── CAPSULE COUNTDOWN ────────────────────────────────────
   function _startCapsuleCountdown() {
     _stopCapsuleCountdown();
@@ -484,9 +833,17 @@ const EcosphereVR = (() => {
         el.textContent = remaining > 0 ? 'forms in ' + _formatCountdown(remaining) : 'opening now…';
       });
     }, 1000);
+    _capsuleCheckTimeout = setTimeout(() => {
+      const el = document.getElementById('eco-unlistenable-check');
+      if (!el) return;
+      el.textContent = UNLISTENABLE_CHECKS[Math.floor(Math.random() * UNLISTENABLE_CHECKS.length)];
+      el.classList.add('is-visible');
+      setTimeout(() => el.classList.remove('is-visible'), 8000);
+    }, 7000 + Math.random() * 8000);
   }
   function _stopCapsuleCountdown() {
     if (_capsuleInterval) { clearInterval(_capsuleInterval); _capsuleInterval = null; }
+    if (_capsuleCheckTimeout) { clearTimeout(_capsuleCheckTimeout); _capsuleCheckTimeout = null; }
   }
 
   // ─── WHISPER ──────────────────────────────────────────────
@@ -526,6 +883,11 @@ const EcosphereVR = (() => {
     _s.activePulsePicker = null;
   }
   function sendPulse(carrierId, word) {
+    if (carrierId === 'ghost_in_wires') {
+      closePulsePicker();
+      UI.toast('ghost_in_wires does not respond to pulses');
+      return;
+    }
     _s.sentPulses.push({ carrierId, word, ts: Date.now() });
     closePulsePicker();
     const badge = document.querySelector(`.eco-carrier-badge[data-carrier-id="${carrierId}"]`);
@@ -773,6 +1135,17 @@ const EcosphereVR = (() => {
             <span>Seal it <span class="eco-seal-label__hint">others tap to break</span></span>
           </label>
         </div>
+        <div class="eco-predictive-echo" id="eco-predictive-echo" aria-live="polite">
+          <div class="eco-predictive-echo__inner">
+            <span class="eco-predictive-conf" id="eco-predictive-conf"></span>
+            <p class="eco-predictive-text" id="eco-predictive-text"></p>
+            <div class="eco-predictive-actions">
+              <button class="eco-predictive-btn eco-predictive-btn--accept" id="eco-predictive-accept" aria-label="This resonates with me">sounds right</button>
+              <button class="eco-predictive-btn eco-predictive-btn--reject" id="eco-predictive-next" aria-label="Show next phrase">not quite</button>
+            </div>
+          </div>
+        </div>
+
         <button class="eco-record-btn" id="eco-record-start" aria-label="Start recording voice reaction">
           <div class="eco-record-btn__ring" aria-hidden="true"></div>
           <div class="eco-record-btn__ring eco-record-btn__ring--2" aria-hidden="true"></div>
@@ -929,6 +1302,12 @@ const EcosphereVR = (() => {
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape') { this.closeModal(); this.dismissOnboarding(); closePulsePicker(); }
       });
+      // Predictive echo
+      document.getElementById('eco-predictive-accept')?.addEventListener('click', () => {
+        const text = document.getElementById('eco-predictive-text')?.textContent;
+        if (text) PredictiveEcho.accept(text);
+      });
+      document.getElementById('eco-predictive-next')?.addEventListener('click', () => PredictiveEcho.next());
     },
 
     // ── Tabs ──────────────────────────────────────────────
@@ -971,6 +1350,9 @@ const EcosphereVR = (() => {
         ${this.buildFrequencyPulse(avgScore, totalRxns)}
         ${this.buildResonanceRow()}
         ${this.buildCarrierBlock()}
+        ${this.buildStaticFingerprint()}
+        ${this.buildCoDriftBlock()}
+        ${this.buildReverseObs()}
         ${this.buildRecentActivity()}
       `;
       document.getElementById('eco-carrier-legend-toggle')?.addEventListener('click', () => {
@@ -987,6 +1369,34 @@ const EcosphereVR = (() => {
           if (e.key === 'Enter' || e.key === ' ') openPulsePicker(badge.dataset.carrierId, badge);
         });
       });
+      // Co-drift
+      document.getElementById('eco-codrift-start')?.addEventListener('click', () => CoDrift.start());
+      // Reverse observatory toggle
+      const revToggle = document.getElementById('eco-rev-obs-toggle');
+      if (revToggle) {
+        revToggle.addEventListener('click', () => {
+          _s.reverseObs = !_s.reverseObs;
+          revToggle.classList.toggle('is-active', _s.reverseObs);
+          revToggle.setAttribute('aria-pressed', String(_s.reverseObs));
+          revToggle.textContent = _s.reverseObs ? 'WATCHING' : 'ACTIVATE';
+          const statusEl = document.getElementById('eco-rev-obs-status');
+          if (statusEl) statusEl.textContent = _s.reverseObs ? 'viewing attention of 12 others' : 'press to observe others\' attention';
+          const block = revToggle.closest('.eco-rev-obs-block');
+          if (block) block.classList.toggle('is-active', _s.reverseObs);
+          const canvas = document.getElementById('eco-attention-canvas');
+          if (_s.reverseObs && canvas) AttentionTrails.start(canvas);
+          else AttentionTrails.stop();
+        });
+        if (_s.reverseObs) {
+          const block = revToggle.closest('.eco-rev-obs-block');
+          if (block) block.classList.add('is-active');
+          const canvas = document.getElementById('eco-attention-canvas');
+          if (canvas) setTimeout(() => AttentionTrails.start(canvas), 60);
+        }
+      }
+      // Draw static fingerprint
+      const sc = document.getElementById('eco-static-canvas');
+      if (sc) setTimeout(() => StaticBloom.draw(sc, _staticSeed()), 60);
     },
 
     buildRoomFreq() {
@@ -1044,12 +1454,15 @@ const EcosphereVR = (() => {
     buildCarrierBlock() {
       const allCarriers = _s.signals.flatMap(s => s.carriers.map(c => ({ ...c, signalTitle: s.title })));
       const seen = new Set(); const unique = allCarriers.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+      // Inject phantom carrier — appears indistinguishable from a human listener
+      unique.push({ id: 'ghost_in_wires', name: 'ghost_in_wires', status: 'pulse', isPhantom: true });
       const badges = unique.map(c => {
         const st = CARRIER_STATUS[c.status] || CARRIER_STATUS.soft_focus;
-        return `<div class="eco-carrier-badge eco-carrier-badge--${c.status}"
+        const phantomCls = c.isPhantom ? ' eco-carrier-badge--phantom' : '';
+        return `<div class="eco-carrier-badge eco-carrier-badge--${c.status}${phantomCls}"
           data-carrier-id="${c.id}"
           role="button" tabindex="0"
-          aria-label="${c.name} · ${st.label}: ${st.desc}. Tap to send a pulse.">
+          aria-label="${c.name} · ${st.label}: ${st.desc}.${c.isPhantom ? '' : ' Tap to send a pulse.'}">
           <div class="eco-carrier-badge__dot" aria-hidden="true"></div>
           <span class="eco-carrier-badge__label">${c.name}</span>
           <span class="eco-carrier-badge__status">${st.label}</span>
@@ -1075,6 +1488,7 @@ const EcosphereVR = (() => {
           <p class="eco-carrier-legend__title">CARRIER STATUS LEGEND</p>
           <div class="eco-carrier-legend__rows">${legendRows}</div>
         </div>
+        <div class="eco-phantom-whisper" id="eco-phantom-whisper" aria-live="polite" aria-atomic="true"></div>
       </div>`;
     },
 
@@ -1092,6 +1506,45 @@ const EcosphereVR = (() => {
       return `<div class="eco-recent-block">
         <p class="eco-recent-block__label">RECENT ACTIVITY</p>
         ${items}
+      </div>`;
+    },
+
+    buildStaticFingerprint() {
+      const plays = _allRxns().reduce((s, r) => s + (r.replays || 0), 0);
+      const hint  = plays > 0 ? 'unique to your listening history' : 'no history yet — fingerprint is generic';
+      return `<div class="eco-static-block">
+        <div class="eco-static-block__header">
+          <span class="eco-static-block__label">STATIC RESIDUE</span>
+          <span class="eco-static-block__hint">${hint}</span>
+        </div>
+        <canvas class="eco-static-canvas" id="eco-static-canvas" role="img" aria-label="Sonic fingerprint visualization"></canvas>
+      </div>`;
+    },
+
+    buildCoDriftBlock() {
+      return `<div class="eco-codrift-block">
+        <div class="eco-codrift-block__header">
+          <span class="eco-codrift-block__label">SHARED DRIFT</span>
+          <span class="eco-codrift-block__hint">synchronise with a nearby drifter</span>
+        </div>
+        <p class="eco-codrift-block__desc">Connect your frequency to someone drifting nearby. Sit still for 15 seconds. Then compare what you each felt.</p>
+        <button class="eco-codrift-start" id="eco-codrift-start" ${_s.coDriftActive ? 'disabled aria-disabled="true"' : ''} aria-label="Begin co-drift synchronisation">
+          ${_s.coDriftActive ? 'drift in progress…' : 'begin co-drift'}
+        </button>
+      </div>`;
+    },
+
+    buildReverseObs() {
+      return `<div class="eco-rev-obs-block${_s.reverseObs ? ' is-active' : ''}">
+        <div class="eco-rev-obs-block__header">
+          <span class="eco-rev-obs-block__label">REVERSE OBSERVATORY</span>
+          <button class="eco-rev-obs-toggle${_s.reverseObs ? ' is-active' : ''}" id="eco-rev-obs-toggle"
+            role="switch" aria-pressed="${_s.reverseObs}" aria-label="Toggle reverse observatory">
+            ${_s.reverseObs ? 'WATCHING' : 'ACTIVATE'}
+          </button>
+        </div>
+        <p class="eco-rev-obs-status" id="eco-rev-obs-status">${_s.reverseObs ? 'viewing attention of 12 others' : 'press to observe others\' attention'}</p>
+        <canvas class="eco-attention-canvas" id="eco-attention-canvas" role="img" aria-label="Attention trails of other listeners"></canvas>
       </div>`;
     },
 
@@ -1127,6 +1580,16 @@ const EcosphereVR = (() => {
     },
 
     buildSignalCard(sig) {
+      if (_s.faded.has(sig.id)) {
+        return `<article class="eco-signal-card eco-signal-card--faded" data-signal-id="${sig.id}" aria-label="${sig.title} — memory faded">
+          <div class="eco-signal-header">
+            <div class="eco-signal-meta">
+              <span class="eco-signal-id">${sig.title}</span>
+            </div>
+          </div>
+          <p class="eco-signal-content is-faded"><span class="eco-faded-placeholder">[something was here]</span></p>
+        </article>`;
+      }
       const rxns     = _s.reactions[sig.id] || [];
       const count    = rxns.length;
       const expanded = _s.expandedSignals.has(sig.id);
@@ -1400,6 +1863,7 @@ const EcosphereVR = (() => {
       _s.pendingFilter = 'none'; _s.pendingAnon = false; _s.pendingSeal = false;
       const anonChk = document.getElementById('eco-anon-check'); if (anonChk) anonChk.checked = false;
       const sealChk = document.getElementById('eco-seal-check'); if (sealChk) sealChk.checked = false;
+      PredictiveEcho.start();
     },
 
     closeModal() {
@@ -1409,6 +1873,7 @@ const EcosphereVR = (() => {
       if (!modal) return;
       modal.classList.remove('is-open');
       setTimeout(() => modal.setAttribute('hidden', ''), 360);
+      PredictiveEcho.stop();
       _s.recordingSignalId = null;
     },
 
@@ -1451,9 +1916,30 @@ const EcosphereVR = (() => {
       const field = document.getElementById('eco-drift-field');
       if (!field) return;
       const drifted = _allRxns().filter(r => r.sentToDrift);
-      if (!drifted.length) { field.innerHTML = '<p class="eco-empty eco-drift-empty">No reactions have drifted yet.<br>Send one from the Signals tab.</p>'; return; }
-      field.innerHTML = drifted.map((r, i) => {
-        const x = 5 + (i * 19 + 7) % 82, y = 5 + (i * 31 + 13) % 75;
+      const unlocked = _isDriftHour();
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      const tmLabel  = tomorrow.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const temporalHtml = `<div class="eco-temporal-room${unlocked ? ' is-unlocked' : ''}">
+        <div class="eco-temporal-room__header">
+          <span class="eco-temporal-room__label">FUTURE DRIFT</span>
+          <span class="eco-temporal-room__badge">${unlocked ? 'UNLOCKED' : 'OPENS AT 3:33AM'}</span>
+        </div>
+        ${unlocked
+          ? `<p class="eco-temporal-room__hint">signals from ${tmLabel}</p>
+             ${FUTURE_SIGNALS.map(fs => `<div class="eco-future-signal" tabindex="0" role="article" aria-label="Future signal: ${fs.content}">
+               <span class="eco-future-signal__date">${tmLabel}</span>
+               <p class="eco-future-signal__text">"${_escapeHtml(fs.content)}"</p>
+               <span class="eco-future-signal__resonance">${fs.resonance}% resonance</span>
+             </div>`).join('')}`
+          : `<p class="eco-temporal-room__hint">at certain hours — 3:33am · 11:11pm · 2:22am · 4:44am — a future drift room unlocks. signals from tomorrow appear, labeled with their date.</p>`
+        }
+      </div>`;
+      if (!drifted.length) {
+        field.innerHTML = temporalHtml + '<p class="eco-empty eco-drift-empty">No reactions have drifted yet.<br>Send one from the Signals tab.</p>';
+        return;
+      }
+      field.innerHTML = temporalHtml + drifted.map((r, i) => {
+        const x = 5 + (i * 19 + 7) % 82, y = 30 + (i * 31 + 13) % 58;
         return `<div class="eco-drift-fragment" style="left:${x}%;top:${y}%" data-rxn-id="${r.id}" data-signal-id="${r.signalId}" role="button" tabindex="0" aria-label="Play drifted reaction from ${_ago(r.ts)}">
           <canvas class="eco-drift-waveform" id="eco-drift-wvf-${r.id}" width="60" height="20" aria-hidden="true"></canvas>
           <span class="eco-drift-time">${_ago(r.ts)}</span>
@@ -1556,13 +2042,23 @@ const EcosphereVR = (() => {
           </div>`;
         }).join('')}`;
 
+      const unlistenableHtml = `<div class="eco-unlistenable" id="eco-unlistenable" role="region" aria-label="Unlistenable signal">
+        <div class="eco-unlistenable__header">
+          <span class="eco-unlistenable__label">FREQUENCY BEYOND HUMAN RANGE</span>
+          <span class="eco-unlistenable__badge">∞ Hz</span>
+        </div>
+        <div class="eco-unlistenable__waveform" aria-hidden="true">${Array.from({length:24},(_,i)=>`<div class="eco-unlistenable__bar" style="--i:${i}"></div>`).join('')}</div>
+        <p class="eco-unlistenable__desc">this signal exists. your biology cannot perceive it.</p>
+        <p class="eco-unlistenable__check" id="eco-unlistenable-check" aria-live="polite" aria-atomic="true"></p>
+      </div>`;
+
       const hasUserCapsules = archived.length || priv.length || lost.length;
 
       if (!hasUserCapsules) {
-        container.innerHTML = formingHtml + `<p class="eco-empty" style="margin-top:var(--sp-4)">No personal capsules yet.<br>Archive a reaction or it will appear here when lost.</p>`;
+        container.innerHTML = unlistenableHtml + formingHtml + `<p class="eco-empty" style="margin-top:var(--sp-4)">No personal capsules yet.<br>Archive a reaction or it will appear here when lost.</p>`;
       } else {
         container.innerHTML =
-          formingHtml +
+          unlistenableHtml + formingHtml +
           section('ARCHIVED — stored, always accessible', archived) +
           section('PRIVATE — only you can hear these', priv) +
           section('LOST — corrupted or expired traces', lost);
@@ -1623,6 +2119,7 @@ const EcosphereVR = (() => {
     _s.signals.forEach(sig => { if (!sig.echoes) sig.echoes = []; });
     _s.reactions = Store.loadReactions();
     _s.unsent    = Store.loadUnsent();
+    _s.faded     = Store.loadFaded();
     Object.keys(_s.reactions).forEach(sid => {
       (_s.reactions[sid] || []).forEach(r => {
         if (r.audioData && !r.audioUrl) r.audioUrl = _base64ToUrl(r.audioData);
@@ -1634,6 +2131,7 @@ const EcosphereVR = (() => {
     if (!container) return;
     _init(); UI.mount(container);
     Room.start();
+    PhantomCarrier.start();
     const controls = document.getElementById('eco-controls');
     if (controls) controls.style.display = 'none';
   }
@@ -1643,6 +2141,10 @@ const EcosphereVR = (() => {
     if (_s.recording) Recorder.stop();
     Presence.stopAll();
     Room.stop();
+    PhantomCarrier.stop();
+    PredictiveEcho.stop();
+    AttentionTrails.stop();
+    CoDrift.stop();
     _stopCapsuleCountdown();
   }
 
