@@ -1,8 +1,10 @@
 name: Deploy Pages
 
+# NOTE: GitHub Pages requires the repository to be PUBLIC (on the free plan).
+# While the repo is private this deploy will fail at "Configure Pages", so it
+# is manual-only (workflow_dispatch). Make the repo public, then run it from the
+# Actions tab — it will publish to https://pizzasta.github.io/Jarvis/
 on:
-  push:
-    branches: [ "main", "claude/charming-ritchie-ak65y5" ]
   workflow_dispatch:
 
 # Allow the workflow to publish to GitHub Pages.
