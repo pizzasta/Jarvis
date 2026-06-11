@@ -25,6 +25,20 @@ Switch cities from the rail near the top. Each city has its own buildings:
 - **🧠 Mind City** — JARVIS Core, Memory Vault, Research District, Neural Forge
 - **👁 Vision City** — Vision Lab, Data Vault, Comms Tower, Sentinel
 - **🚀 Launch City** — Project Lab, Operations Center, Design Tower, Data Vault
+- **👑 Empire City** — **Business Builder**, **App Trend Builder**, Design Tower, Project Lab
+
+### Empire City guides
+
+1. **👑 Business Builder** — build a clothing brand end-to-end: brand name + tagline ideas,
+   a product line with fabrics & mockup briefs, full **Shopify** listings, **Canva** template
+   plans, **printables / print-on-demand** products, a 14-day **TikTok** content calendar
+   with viral hooks, an interactive **profit calculator**, an email-flow generator, and a
+   launch checklist — plus a grid of sub-agents (Brand, Product, Shopify, Canva, Printables,
+   TikTok, Pricing, Email, Launch, Growth).
+2. **📱 App Trend Builder** — invents **brand-new, original** app ideas by combining domains,
+   mechanics, audiences and twists, then passing each through a **clone filter** so it never
+   copies a known app. Expand any idea into a full spec (problem, features, monetization, tech
+   stack, MVP plan, go-to-market), browse a **trend radar**, and generate registrable app names.
 
 ### The two headline guides (Creator City)
 
@@ -50,4 +64,6 @@ Switch cities from the rail near the top. Each city has its own buildings:
 - `js/songwriting-studio.js` — Suno Helper workspace
 - `js/book-helper.js` — Book Helper workspace + Humanizer
 - `js/design-tower.js`, `js/memory-vault.js` — additional building workspaces
+- `js/business-builder.js` — Business Builder workspace (brand, Shopify, Canva, printables, TikTok, pricing)
+- `js/app-trend-builder.js` — App Trend Builder workspace (original app-idea generator)
 - `styles/` — themed CSS per area
