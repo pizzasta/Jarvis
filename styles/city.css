@@ -621,6 +621,7 @@ body[data-city-state='active'] .building-card::after { opacity: 0.5; }
 .building-card[data-building-id='neural-forge']      { --building-color: #ffd700; --building-color-2: #fff176; }
 .building-card[data-building-id='comms-tower']       { --building-color: #00ff9f; --building-color-2: #69ffce; }
 .building-card[data-building-id='sentinel']          { --building-color: #ff6b35; --building-color-2: #ffa987; }
+.building-card[data-building-id='ecosphere']         { --building-color: #00e5ff; --building-color-2: #ff2d78; }
 
 /* Powered-on glows per building */
 body[data-city-state='active'] .building-card[data-building-id='songwriting']:hover      { box-shadow: 0 8px 40px rgba(224,64,251,0.35), 0 0 0 1px rgba(224,64,251,0.1) inset !important; }
@@ -629,6 +630,7 @@ body[data-city-state='active'] .building-card[data-building-id='edit-library']:h
 body[data-city-state='active'] .building-card[data-building-id='research-district']:hover{ box-shadow: 0 8px 40px rgba(105,240,174,0.35), 0 0 0 1px rgba(105,240,174,0.1) inset !important; }
 body[data-city-state='active'] .building-card[data-building-id='project-lab']:hover      { box-shadow: 0 8px 40px rgba(255,82,82,0.35), 0 0 0 1px rgba(255,82,82,0.1) inset !important; }
 body[data-city-state='active'] .building-card[data-building-id='memory-vault']:hover     { box-shadow: 0 8px 40px rgba(124,77,255,0.35), 0 0 0 1px rgba(124,77,255,0.1) inset !important; }
+body[data-city-state='active'] .building-card[data-building-id='ecosphere']:hover         { box-shadow: 0 8px 40px rgba(0,229,255,0.35), 0 0 0 1px rgba(0,229,255,0.1) inset !important; }
 
 /* City grid - increase max buildings per row on wide screens */
 @media (min-width: 1200px) {

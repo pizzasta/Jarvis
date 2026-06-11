@@ -29,6 +29,7 @@ const AgentRegistry = (() => {
     { id:'project-lab',       icon:'🚀', title:'PROJECT LAB',         description:'Plan, build & ship projects',      theme:{primaryColor:'#ff5252',secondaryColor:'#ff8a80'}, actions:['Plan Sprint','Roadmap','Brief','Retrospective'], memory:{} },
     { id:'ops-center',        icon:'⚙️', title:'OPERATIONS CENTER', description:'Automate & orchestrate tasks',    theme:{primaryColor:'#b0bec5',secondaryColor:'#eceff1'}, actions:['Automate','Schedule','Delegate','Monitor'],  memory:{} },
     { id:'memory-vault',      icon:'💾', title:'MEMORY VAULT',        description:'Long-term context & recall',       theme:{primaryColor:'#7c4dff',secondaryColor:'#b388ff'}, actions:['Remember','Forget','Summarise Context','Export'], memory:{} },
+    { id:'ecosphere',         icon:'🌊', title:'ECOSPHERE',           description:'Voice reaction ecosystem',         theme:{primaryColor:'#00e5ff',secondaryColor:'#ff2d78'}, actions:['React','Listen','Drift','Explore'],          memory:{} },
   ];
   const getAll = () => _b;
   const getById = id => _b.find(b=>b.id===id) ?? null;
@@ -352,6 +353,17 @@ const BuildingWorkspace = (() => {
       }
       return;
     }
+    if(id === 'ecosphere') {
+      if(body) {
+        body.innerHTML = '';
+        if(typeof EcosphereVR !== 'undefined') {
+          EcosphereVR.mount(body);
+        } else {
+          body.innerHTML = '<p style="color:#00e5ff;padding:2rem">Ecosphere loading...</p>';
+        }
+      }
+      return;
+    }
     // Default workspace for other buildings
     if(!body) return;
     const b = AgentRegistry.getById(id);
@@ -388,6 +400,7 @@ const BuildingWorkspace = (() => {
     document.body.classList.remove('workspace-active');
     CityState.set({activeBuilding:null});
     document.querySelectorAll('.building-card').forEach(c => c.classList.remove('is-active'));
+    if(typeof EcosphereVR !== 'undefined') EcosphereVR.onClose();
   };
   const sendMessage = (msg) => {
     VoiceEngine.processInput(msg);
