@@ -172,6 +172,32 @@ var AppTrendBuilder = (function() {
     }).join('');
   }
 
+  // ---- Live AI idea generation (uses server.js Claude proxy when available) ----
+  function _aiGenerate(){
+    var btn=document.getElementById('atb-gen-ai');
+    if(!window.AIClient || !AIClient.available()){
+      _setDetail('Live AI is offline. Run the app with the server to enable it:\n\n  ANTHROPIC_API_KEY=sk-ant-... node server.js\n\nthen open http://localhost:8000 — the AI Ideas button invents fresh concepts with a real model.');
+      _switchTab('detail');
+      return;
+    }
+    var seed = _state.ideas.length ? _state.ideas[Math.floor(Math.random()*_state.ideas.length)] : _newIdea();
+    var orig=btn?btn.textContent:''; if(btn){ btn.textContent='Inventing…'; btn.disabled=true; }
+    _setDetail('Inventing brand-new app ideas with Claude…');
+    _switchTab('detail');
+    var prompt='Invent 3 brand-new, original mobile/web app ideas. They must NOT copy or closely resemble any existing well-known app. ' +
+      'For inspiration only, lean into a "'+seed.mechanic+'" mechanic and the "'+seed.domain+'" space, but feel free to diverge. ' +
+      'For each idea give: NAME, one-line pitch, the problem it solves, 3 core features, monetization, and why it is novel (not a clone). Keep it tight.';
+    AIClient.generate({ system:'You are a sharp startup ideation partner. Generate genuinely original app concepts — never clones of existing apps. Be concrete and concise.', prompt:prompt, max_tokens:1600 })
+      .then(function(t){
+        _setDetail((t||'').trim()||'No ideas returned.');
+        _state.current={ id:Date.now(), name:'AI Concepts', pitch:'AI-generated original app ideas' };
+        if(window.CityMemory) CityMemory.add({ category:'app-idea', title:'AI app ideas', content:el_detailText(), tags:['app','ai'], building:'app-trend-builder' });
+      })
+      .catch(function(e){ _setDetail('AI request failed: '+e.message); })
+      .then(function(){ if(btn){ btn.textContent=orig; btn.disabled=false; } });
+  }
+  function el_detailText(){ var el=document.getElementById('atb-detail'); return el?el.textContent:''; }
+
   // ---- Name lab ----
   function _genNames(){
     var out=[]; var guard=0;
@@ -208,6 +234,7 @@ var AppTrendBuilder = (function() {
       '<div class="atb-gen-row">',
       '<button class="atb-btn atb-btn--primary" id="atb-gen-4">⚡ Generate 4 Ideas</button>',
       '<button class="atb-btn atb-btn--ghost" id="atb-gen-8">🎲 Generate 8</button>',
+      '<button class="atb-btn atb-btn--primary" id="atb-gen-ai">✨ AI Ideas</button>',
       '</div>',
       '<div class="atb-idea-grid" id="atb-idea-grid"><p class="atb-empty">Hit Generate to invent fresh ideas.</p></div>',
       '</div>',
@@ -244,6 +271,7 @@ var AppTrendBuilder = (function() {
     document.querySelectorAll('.atb-tab-btn').forEach(function(b){ b.addEventListener('click', function(){ _switchTab(b.dataset.tab); }); });
     var g4=document.getElementById('atb-gen-4'); if(g4) g4.addEventListener('click', function(){ _genBatch(4); });
     var g8=document.getElementById('atb-gen-8'); if(g8) g8.addEventListener('click', function(){ _genBatch(8); });
+    var gai=document.getElementById('atb-gen-ai'); if(gai) gai.addEventListener('click', _aiGenerate);
     var nb=document.getElementById('atb-name-btn'); if(nb) nb.addEventListener('click', _genNames);
     var cb=document.getElementById('atb-copy-btn'); if(cb) cb.addEventListener('click', _copyDetail);
     var sb=document.getElementById('atb-save-btn'); if(sb) sb.addEventListener('click', _saveCurrent);

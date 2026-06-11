@@ -210,6 +210,12 @@ var VoicePersonality = (function() {
   return { greet:greet, joke:joke, think:think, agentReply:agentReply, routeSuggestion:routeSuggestion };
 })();
 
+var JARVIS_SYSTEM = 'You are JARVIS, Jess\'s personal AI assistant in a neon AI-city interface. ' +
+  'Speak in a warm, witty British butler tone and address the user as Jess. ' +
+  'Keep replies concise and spoken-friendly (1-3 sentences) since they are read aloud. ' +
+  'You can help with music (Suno Helper), books (Book Helper), building a clothing brand ' +
+  '(Business Builder: Shopify, Canva, printables, TikTok), and inventing original app ideas (App Trend Builder).';
+
 var VoiceEngine = (function() {
   var _synth=window.speechSynthesis, _recog=null, _voice=null, _listening=false;
   function loadV(){ var v=_synth.getVoices(); _voice=v.find(function(x){ return x.name==='Google UK English Female'; })||v.find(function(x){ return x.lang==='en-GB'&&x.name.toLowerCase().includes('female'); })||v.find(function(x){ return x.lang.startsWith('en-GB'); })||v.find(function(x){ return x.name.toLowerCase().includes('female'); })||v[0]; }
@@ -240,6 +246,14 @@ var VoiceEngine = (function() {
     setOrbState('thinking');
     var res = window.JarvisBrain ? JarvisBrain.respond(text) : null;
     if(res && res.route){ var rreply=VoicePersonality.agentReply(res.route); setTimeout(function(){ _routeTo(res.route,rreply); },700); return; }
+    // 2a) If the live Claude proxy is running, get a real generative answer.
+    if(window.AIClient && AIClient.available()){
+      AIClient.generate({ system: JARVIS_SYSTEM, prompt: text, max_tokens: 700 })
+        .then(function(t){ speak((t||'').trim() || (res&&res.reply) || VoicePersonality.think()); })
+        .catch(function(){ speak((res&&res.reply)||VoicePersonality.think()); });
+      return;
+    }
+    // 2b) Local fallback brain.
     setTimeout(function(){ speak((res&&res.reply)||VoicePersonality.think()); },550);
   }
   function startListening(){
@@ -352,5 +366,13 @@ document.addEventListener('DOMContentLoaded', function() {
   Routes.init();
   HUD.init();
   CityState.subscribe(HUD.upd);
-  console.log('[JARVIS] City v3.1 - Memory Vault + Design Tower online.');
+  // Detect the live Claude proxy (server.js). If present, buildings + brain go generative.
+  if(window.AIClient){
+    AIClient.checkHealth().then(function(ok){
+      var el=document.getElementById('system-status');
+      if(el) el.textContent = ok ? 'AI LIVE' : 'ONLINE';
+      console.log('[JARVIS] Live Claude API: ' + (ok ? ('ENABLED ('+AIClient.model()+')') : 'offline — using local templates'));
+    });
+  }
+  console.log('[JARVIS] City v3.2 - Business Builder + App Trend Builder + live AI online.');
 });

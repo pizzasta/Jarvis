@@ -48,6 +48,31 @@ Switch cities from the rail near the top. Each city has its own buildings:
    plus a **Humanizer** that rewrites AI-sounding text to read like a real person, with a
    live "human score".
 
+## Live AI (optional) — truly generative output
+
+By default every building generates from rich local templates (no API key needed —
+just open `index.html`). To make JARVIS *truly generative*, run the included
+zero-dependency proxy with a Claude API key:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-... node server.js
+# then open http://localhost:8000
+```
+
+The proxy (`server.js`) serves the app **and** forwards prompts to the Claude API
+(`claude-opus-4-8`) — the key stays on the server and never reaches the browser.
+When it's live:
+
+- The HUD shows **AI LIVE**, and the orb/chat "ask anything" answers come straight
+  from Claude (in JARVIS's British voice).
+- **Business Builder → ✨ AI Boost** turns any template draft into sharper,
+  brand-specific, ready-to-use copy.
+- **App Trend Builder → ✨ AI Ideas** invents genuinely original app concepts with
+  the model (with a "no clones" instruction), not just the combinatorial engine.
+
+Without the server, those buttons explain how to enable live AI and the app keeps
+working on templates. Copy `.env.example` for the variables you can set.
+
 ## Voice & "ask anything"
 
 - British-accented greeting that says **Hello Jess** on power-on.
@@ -66,4 +91,6 @@ Switch cities from the rail near the top. Each city has its own buildings:
 - `js/design-tower.js`, `js/memory-vault.js` — additional building workspaces
 - `js/business-builder.js` — Business Builder workspace (brand, Shopify, Canva, printables, TikTok, pricing)
 - `js/app-trend-builder.js` — App Trend Builder workspace (original app-idea generator)
+- `server.js` — optional zero-dependency static server + Claude API proxy (`/api/generate`)
+- `js/ai-client.js` — browser bridge to the proxy; falls back to templates when offline
 - `styles/` — themed CSS per area

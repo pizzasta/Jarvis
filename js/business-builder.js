@@ -225,6 +225,23 @@ var BusinessBuilder = (function() {
     _setOutput(txt); _save('Growth plan', txt);
   }
 
+  // ---- Live AI boost (uses server.js Claude proxy when available) ----
+  function _aiBoost(){
+    var el=document.getElementById('bb-output'); var btn=document.getElementById('bb-ai-btn');
+    var current=(el&&el.textContent.trim())||'';
+    if(!window.AIClient || !AIClient.available()){
+      _setOutput('Live AI is offline. Run the app with the server to enable it:\n\n  ANTHROPIC_API_KEY=sk-ant-... node server.js\n\nthen open http://localhost:8000 — the AI Boost button turns your template into truly generative output.');
+      return;
+    }
+    var orig=btn?btn.textContent:''; if(btn){ btn.textContent='Thinking…'; btn.disabled=true; }
+    var prompt='You are an expert clothing-brand business consultant. Niche: '+_state.niche+'. Brand: '+(_state.brand||'(unnamed)')+
+      '.\n\nTake the draft below and make it sharper, more specific and more actionable. Keep it practical and ready to use.\n\nDRAFT:\n'+(current||'Give me a strong next step for this brand.');
+    AIClient.generate({ system:'You are a concise, expert e-commerce and clothing-brand strategist. Return clean, copy-ready text.', prompt:prompt, max_tokens:1400 })
+      .then(function(t){ _setOutput((t||'').trim()||current); _save('AI Boost', el?el.textContent:''); })
+      .catch(function(e){ _setOutput('AI request failed: '+e.message+'\n\n(Falling back to your template output above.)'); })
+      .then(function(){ if(btn){ btn.textContent=orig; btn.disabled=false; } });
+  }
+
   // ---- Output actions ----
   function _copyOutput(){
     var el=document.getElementById('bb-output'); if(!el||!el.textContent.trim()) return;
@@ -383,6 +400,7 @@ var BusinessBuilder = (function() {
       '<div class="bb-output-lbl">Output</div>',
       '<div class="bb-output" id="bb-output" aria-live="polite">Your generated content will appear here...</div>',
       '<div class="bb-output-acts">',
+      '<button class="bb-btn bb-btn--primary" id="bb-ai-btn">✨ AI Boost</button>',
       '<button class="bb-btn bb-btn--ghost" id="bb-copy-btn">Copy</button>',
       '<button class="bb-btn bb-btn--ghost" id="bb-ver-btn">Save Version</button>',
       '<button class="bb-btn bb-btn--ghost" id="bb-pin-btn">⭐ Pin</button>',
@@ -420,7 +438,7 @@ var BusinessBuilder = (function() {
       });
     });
 
-    var acts={ 'bb-copy-btn':_copyOutput,'bb-ver-btn':_saveVersion,'bb-pin-btn':_pinOutput,'bb-send-out-btn':_sendToBuilding,'bb-send-confirm':_confirmSend };
+    var acts={ 'bb-ai-btn':_aiBoost,'bb-copy-btn':_copyOutput,'bb-ver-btn':_saveVersion,'bb-pin-btn':_pinOutput,'bb-send-out-btn':_sendToBuilding,'bb-send-confirm':_confirmSend };
     Object.keys(acts).forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('click', acts[id]); });
     var cancel=document.getElementById('bb-send-cancel'); if(cancel) cancel.addEventListener('click', function(){ document.getElementById('bb-send-modal').classList.remove('is-open'); });
   }
