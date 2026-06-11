@@ -609,6 +609,7 @@ body[data-city-state='active'] .building-card::after { opacity: 0.5; }
 
 /* Building ID-specific icon glow colors */
 .building-card[data-building-id='songwriting']       { --building-color: #e040fb; --building-color-2: #f8a6ff; }
+.building-card[data-building-id='book-helper']        { --building-color: #e8b06b; --building-color-2: #ffd9a0; }
 .building-card[data-building-id='design-tower']      { --building-color: #ff9500; --building-color-2: #ffcc02; }
 .building-card[data-building-id='edit-library']      { --building-color: #4fc3f7; --building-color-2: #b3e5fc; }
 .building-card[data-building-id='research-district'] { --building-color: #69f0ae; --building-color-2: #b9fbc0; }
@@ -650,3 +651,52 @@ body[data-city-state='active'] .building-card:nth-child(even) { animation: ambie
 }
 /* Don't apply when hovering or active */
 .building-card:hover, .building-card.is-active, .building-card.is-routing { animation: none !important; }
+
+/* ═══════════════════════════════════════════
+   CITY RAIL — switch between cities
+═══════════════════════════════════════════ */
+.city-rail {
+  position: absolute;
+  top: 58px; left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  border-radius: var(--r-full);
+  background: rgba(4,2,10,0.55);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  z-index: var(--z-hud);
+  max-width: 92vw;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.city-chip {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+  color: rgba(255,255,255,0.5);
+  transition: all var(--t-normal);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.city-chip__icon { font-size: 0.95rem; line-height: 1; filter: drop-shadow(0 0 4px var(--chip)); }
+.city-chip__name { font-family: var(--font-hud); font-size: 0.5rem; letter-spacing: 0.15em; }
+.city-chip:hover {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--chip) 50%, transparent);
+  background: color-mix(in srgb, var(--chip) 12%, transparent);
+}
+.city-chip.is-active {
+  color: #fff;
+  border-color: var(--chip);
+  background: color-mix(in srgb, var(--chip) 18%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--chip) 35%, transparent);
+}
+
+@media (max-width: 768px) {
+  .city-rail { top: 52px; }
+  .city-chip__name { display: none; }
+  .city-chip { padding: var(--sp-1) var(--sp-2); }
+}

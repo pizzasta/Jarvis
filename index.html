@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="styles/songwriting-studio.css" />
 <link rel="stylesheet" href="styles/memory-vault.css" />
 <link rel="stylesheet" href="styles/design-tower.css" />
+<link rel="stylesheet" href="styles/book-helper.css" />
 </head>
 <body data-city-state="idle" data-orb-state="idle">
 
@@ -33,6 +34,8 @@
     <button class="hud-nav__btn" data-route="agents">AGENTS</button>
   </nav>
 </header>
+
+<div class="city-rail" id="city-rail" aria-label="Select a city"></div>
 
 <div class="skyline" id="skyline" aria-hidden="true">
   <svg class="skyline__svg" viewBox="0 0 1400 300" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
@@ -127,15 +130,18 @@
 </div>
 
 <footer class="hud-bottom" aria-label="Status bar">
+  <div class="hud-bottom__item"><span class="hud-bottom__key">CITY</span><span class="hud-bottom__val" id="city-name">CREATOR CITY</span></div>
   <div class="hud-bottom__item"><span class="hud-bottom__key">AGENTS</span><span class="hud-bottom__val" id="building-count">00</span></div>
   <div class="hud-bottom__item"><span class="hud-bottom__key">SYSTEM</span><span class="hud-bottom__val" id="system-status">ONLINE</span></div>
   <div class="hud-bottom__item"><span class="hud-bottom__key">VOICE</span><span class="hud-bottom__val" id="voice-status">READY</span></div>
 </footer>
 </div>
 
+<script src="js/jarvis-brain.js"></script>
 <script src="js/memory-vault.js"></script>
 <script src="js/songwriting-studio.js"></script>
 <script src="js/design-tower.js"></script>
+<script src="js/book-helper.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
