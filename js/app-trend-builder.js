@@ -85,14 +85,64 @@ var AppTrendBuilder = (function() {
     ].join('\n');
   }
 
-  function _generate(n){
-    n = n||1;
-    var fresh=[]; for(var i=0;i<n;i++) fresh.push(_makeIdea());
+  function _commit(fresh){
     _state.ideas = fresh.concat(_state.ideas).slice(0,30);
     _render();
     fresh.forEach(function(idea){
       if(window.CityMemory) CityMemory.add({ category:'app-idea', title:'App idea: '+idea.name, content:_ideaText(idea), tags:[idea.category,idea.vibe,'app-idea'], building:'app-trend-builder' });
     });
+  }
+  function _generateLocal(n){
+    n = n||1;
+    var fresh=[]; for(var i=0;i<n;i++) fresh.push(_makeIdea());
+    _commit(fresh);
+  }
+  function _parseIdeas(text){
+    if(!text) return [];
+    var s=text.trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+    var a=s.indexOf('['), b=s.lastIndexOf(']');
+    if(a>=0 && b>a) s=s.slice(a,b+1);
+    var arr; try{ arr=JSON.parse(s); }catch(e){ return []; }
+    if(!Array.isArray(arr)) return [];
+    return arr.map(function(o){
+      o=o||{};
+      var feats=Array.isArray(o.features)?o.features.slice(0,5):[];
+      while(feats.length<3) feats.push('Personalised onboarding');
+      return {
+        id: Date.now()+Math.floor(Math.random()*99999),
+        name:String(o.name||'Untitled'),
+        category:String(o.category||(_state.category!=='surprise'?_cap(_state.category):'App')),
+        vibe:String(o.vibe||(_state.vibe!=='surprise'?_state.vibe:'fresh')),
+        oneLiner:String(o.oneLiner||o.one_liner||''),
+        problem:String(o.problem||''),
+        solution:String(o.solution||''),
+        differ:String(o.differ||o.why||''),
+        features:feats.map(String),
+        monetize:String(o.monetize||o.monetization||''),
+        viral:String(o.viral||''),
+        stack:String(o.stack||''),
+        mvp:String(o.mvp||''),
+        ts:Date.now()
+      };
+    });
+  }
+  function _generate(n){
+    n = n||1;
+    if(!(window.AIClient && AIClient.ready())) return _generateLocal(n);
+    var el=document.getElementById('atb-list');
+    if(el) el.innerHTML='<p class="atb-empty ai-streaming">✨ Claude is inventing '+n+' brand-new app idea'+(n>1?'s':'')+'…</p>';
+    var catLine = _state.category!=='surprise' ? ('Category focus: '+_state.category+'. ') : 'Pick surprising, varied categories. ';
+    var vibeLine = _state.vibe!=='surprise' ? ('Vibe: '+_state.vibe+'. ') : '';
+    AIClient.stream({
+      system:'You are a world-class startup ideator. Invent brand-new, original app ideas that are NOT clones of existing apps. Respond with ONLY a JSON array — no prose, no code fences.',
+      prompt:'Invent '+n+' original mobile/web app idea'+(n>1?'s':'')+'. '+catLine+vibeLine+
+        'Return a JSON array where each item has exactly these string fields: name, category, vibe, oneLiner, problem, solution, differ (why it is genuinely new and not a copy), monetize, viral (a growth hook), stack (MVP tech stack), mvp (4-6 week MVP scope), and features (an array of 4-5 short strings). Make each idea novel and specific.',
+      maxTokens: Math.min(1500*n+500, 8000)
+    }).then(function(text){
+      var fresh=_parseIdeas(text);
+      if(!fresh.length){ _generateLocal(n); return; }
+      _commit(fresh);
+    }).catch(function(){ _generateLocal(n); });
   }
 
   function _render(){
@@ -174,7 +224,7 @@ var AppTrendBuilder = (function() {
     opts=opts||{};
     container.innerHTML=_buildHTML();
     _bind();
-    if(!_state.ideas.length) _generate(3); // give Jess something instantly
+    if(!_state.ideas.length) _generateLocal(3); // instant seed; AI runs on Generate
     else _render();
   }
 
