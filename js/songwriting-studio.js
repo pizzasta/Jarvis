@@ -44,6 +44,12 @@ const SongwritingStudio = (() => {
     'Songs from the {mood} Hour — a midnight collection of {genre} confessions, whispered truths and neon dreams.'
   ];
 
+  const MV_TEMPLATES = [
+    'MUSIC VIDEO TREATMENT — {genre}, {mood}\n\nConcept: One continuous night, shot in neon-soaked single takes.\n• Open: artist alone in an empty city, rain on glass, slow push-in.\n• Verse: walking through a {mood} crowd that moves in reverse around them.\n• Chorus: rooftop, the skyline lights up on every downbeat.\n• Bridge: everything cuts to black-and-white, then floods back to colour.\n• End: sunrise, the artist finally smiles.\nPalette: pink + cyan haze. Shot on anamorphic, lots of practical lights.',
+    'MUSIC VIDEO IDEA — {genre}, {mood}\n\nConcept: A performance video that slowly falls apart and rebuilds.\n• Static studio set, single key light.\n• As the {mood} energy builds, the set physically reacts — walls peel, neon ignites.\n• Choreographed silhouettes appear behind a scrim on the hook.\n• Final chorus: the room is fully alive, lights chasing the beat.\nShot list: 12 setups, mix of locked-off + handheld. Trending TikTok-ready vertical alts for each section.',
+    'MUSIC VIDEO STORYBOARD — {genre}, {mood}\n\nNarrative: two people, one phone, a love story told entirely in screen-recordings and reflections.\n• Intro: a missed call.\n• Verse 1: texts floating in {mood} city air.\n• Chorus: they finally meet in a car park lit like a stage.\n• Twist: the whole thing was a memory.\nVibe references: A24 colour grade, lens flares, 35mm grain. Cut fast on the chorus, let the verses breathe.'
+  ];
+
   // ---- Helpers ----
   function _fill(template) {
     return template
@@ -67,6 +73,7 @@ const SongwritingStudio = (() => {
   function generateHook()   { return _fill(_rand(HOOK_TEMPLATES)); }
   function generateSuno()   { return _fill(_rand(SUNO_TEMPLATES)); }
   function generateAlbum()  { return _fill(_rand(ALBUM_TEMPLATES)); }
+  function generateMV()     { return _fill(_rand(MV_TEMPLATES)); }
 
   // ---- Render helpers ----
   function _setOutput(text) {
@@ -268,8 +275,8 @@ const SongwritingStudio = (() => {
       '<div class="ss-header">',
       '<div class="ss-header__icon">🎵</div>',
       '<div class="ss-header__text">',
-      '<h2 class="ss-title">SONGWRITING STUDIO</h2>',
-      '<p class="ss-subtitle">Craft lyrics, hooks, Suno prompts & more</p>',
+      '<h2 class="ss-title">SUNO HELPER</h2>',
+      '<p class="ss-subtitle">Lyrics, hooks, Suno prompts & music video ideas</p>',
       '</div>',
       '</div>',
 
@@ -290,6 +297,7 @@ const SongwritingStudio = (() => {
       '<button class="ss-tab-btn is-active" data-tab="lyric" role="tab">Lyrics</button>',
       '<button class="ss-tab-btn" data-tab="hook" role="tab">Hook</button>',
       '<button class="ss-tab-btn" data-tab="suno" role="tab">Suno</button>',
+      '<button class="ss-tab-btn" data-tab="mv" role="tab">MV Ideas</button>',
       '<button class="ss-tab-btn" data-tab="album" role="tab">Album</button>',
       '<button class="ss-tab-btn" data-tab="drafts" role="tab">Drafts</button>',
       '<button class="ss-tab-btn" data-tab="voice" role="tab">Voice</button>',
@@ -312,6 +320,12 @@ const SongwritingStudio = (() => {
       '<div class="ss-tab-pane" data-tab="suno" role="tabpanel">',
       '<p class="ss-hint">Build an AI-ready Suno prompt for your track.</p>',
       '<button class="ss-btn ss-btn--primary" id="ss-suno-btn">⚙️ Build Suno Prompt</button>',
+      '</div>',
+
+      '<!-- Tab: Music Video Ideas -->',
+      '<div class="ss-tab-pane" data-tab="mv" role="tabpanel">',
+      '<p class="ss-hint">Generate a full music video treatment, storyboard or concept for your track.</p>',
+      '<button class="ss-btn ss-btn--primary" id="ss-mv-btn">🎬 Generate Music Video Idea</button>',
       '</div>',
 
       '<!-- Tab: Album Concept -->',
@@ -396,6 +410,7 @@ const SongwritingStudio = (() => {
     _gen('ss-lyric-btn', generateLyric, 'Lyrics');
     _gen('ss-hook-btn',  generateHook,  'Hook');
     _gen('ss-suno-btn',  generateSuno,  'Suno');
+    _gen('ss-mv-btn',    generateMV,    'Music Video');
     _gen('ss-album-btn', generateAlbum, 'Album');
 
     // Output actions
@@ -435,6 +450,7 @@ const SongwritingStudio = (() => {
     generateHook,
     generateSuno,
     generateAlbum,
+    generateMV,
     _delVoice
   };
 })();

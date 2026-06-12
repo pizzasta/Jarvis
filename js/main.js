@@ -19,18 +19,74 @@ var AgentRegistry = (function() {
     { id:'neural-forge',      icon:'⚡',    title:'NEURAL FORGE',        description:'Training & optimisation',         theme:{primaryColor:'#ffd700',secondaryColor:'#fff176'}, actions:['Train','Tune','Compile','Benchmark'],        memory:{} },
     { id:'comms-tower',       icon:'📡', title:'COMMS TOWER',         description:'Multi-modal IO layer',            theme:{primaryColor:'#00ff9f',secondaryColor:'#69ffce'}, actions:['Send','Receive','Broadcast','Relay'],        memory:{} },
     { id:'sentinel',          icon:'🛡', title:'SENTINEL',            description:'Safety & ethics guard',          theme:{primaryColor:'#ff6b35',secondaryColor:'#ffa987'}, actions:['Guard','Audit','Flag','Allow'],              memory:{} },
-    { id:'songwriting',       icon:'🎵', title:'SONGWRITING STUDIO',  description:'Lyrics, melodies & music craft', theme:{primaryColor:'#e040fb',secondaryColor:'#f8a6ff'}, actions:['Write Lyrics','Compose','Analyse','Rhyme'],  memory:{} },
+    { id:'songwriting',       icon:'🎙️', title:'SUNO HELPER',         description:'Lyrics, Suno prompts & music videos', theme:{primaryColor:'#e040fb',secondaryColor:'#f8a6ff'}, actions:['Lyrics','Suno Prompt','MV Ideas','Hooks'],  memory:{} },
+    { id:'book-helper',       icon:'📖', title:'BOOK HELPER',         description:'Write books that sound human, not AI', theme:{primaryColor:'#e8b06b',secondaryColor:'#ffd9a0'}, actions:['Outline','Chapter','Blurb','Humanize'],     memory:{} },
     { id:'design-tower',      icon:'🎨', title:'DESIGN TOWER',        description:'Apparel, branding & Shopify AI', theme:{primaryColor:'#ff9500',secondaryColor:'#ffcc02'}, actions:['Design Shirt','Brand Kit','Shopify','Trends'],memory:{} },
     { id:'edit-library',      icon:'✍️', title:'EDITING LIBRARY',  description:'Polish, refine & perfect prose', theme:{primaryColor:'#4fc3f7',secondaryColor:'#b3e5fc'}, actions:['Proofread','Rewrite','Summarise','Expand'],  memory:{} },
     { id:'research-district', icon:'🔬', title:'RESEARCH DISTRICT',   description:'Deep-dive knowledge synthesis',  theme:{primaryColor:'#69f0ae',secondaryColor:'#b9fbc0'}, actions:['Research','Fact-Check','Cite','Compare'],    memory:{} },
     { id:'project-lab',       icon:'🚀', title:'PROJECT LAB',         description:'Plan, build & ship projects',    theme:{primaryColor:'#ff5252',secondaryColor:'#ff8a80'}, actions:['Plan Sprint','Roadmap','Brief','Retro'],     memory:{} },
     { id:'ops-center',        icon:'⚙️', title:'OPERATIONS CENTER', description:'Automate & orchestrate tasks',  theme:{primaryColor:'#b0bec5',secondaryColor:'#eceff1'}, actions:['Automate','Schedule','Delegate','Monitor'],  memory:{} },
     { id:'memory-vault',      icon:'💾', title:'MEMORY VAULT',        description:'Long-term context & recall',     theme:{primaryColor:'#7c4dff',secondaryColor:'#b388ff'}, actions:['Remember','Forget','Summarise','Export'],    memory:{} },
+    { id:'business-builder',  icon:'🏬', title:'BUSINESS BUILDER',    description:'Clothing, Shopify, Canva, printables & TikTok', theme:{primaryColor:'#ff2d78',secondaryColor:'#ffc24b'}, actions:['Clothing','Shopify','Printables','TikTok'], memory:{} },
+    { id:'app-trend-builder', icon:'💡', title:'APP TREND BUILDER',   description:'Brand-new app ideas, auto-generated', theme:{primaryColor:'#22d3ee',secondaryColor:'#a855f7'}, actions:['Generate','Surprise','Pin','Build'],        memory:{} },
   ];
   function getAll() { return _b; }
   function getById(id) { return _b.find(function(b){ return b.id===id; }) || null; }
   function register(b) { if(!b.id) throw new Error('id required'); if(_b.find(function(x){ return x.id===b.id; })) return; _b.push(Object.assign({memory:{},actions:[]},b)); }
   return { getAll:getAll, getById:getById, register:register };
+})();
+
+var CityManager = (function() {
+  var _cities = [
+    { id:'creator', name:'CREATOR CITY', icon:'🎨', tagline:'Music, books & design',        accent:'#ff2d78', accent2:'#ff6bac', buildings:['songwriting','book-helper','design-tower','edit-library'] },
+    { id:'mind',    name:'MIND CITY',    icon:'🧠', tagline:'Memory, research & reasoning', accent:'#9d4edd', accent2:'#c77dff', buildings:['jarvis-core','memory-vault','research-district','neural-forge'] },
+    { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
+    { id:'business',name:'BUSINESS CITY',icon:'🏬', tagline:'Brands, products & income',     accent:'#ff2d78', accent2:'#ffc24b', buildings:['business-builder','app-trend-builder','design-tower','ops-center'] },
+    { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] }
+  ];
+  var _active = 'creator';
+  function all() { return _cities; }
+  function get(id) { return _cities.find(function(c){ return c.id===id; }) || _cities[0]; }
+  function active() { return get(_active); }
+  function buildings() { return active().buildings.map(function(id){ return AgentRegistry.getById(id); }).filter(Boolean); }
+  function activeHas(id) { return active().buildings.indexOf(id) !== -1; }
+  function cityOf(id) { return _cities.find(function(c){ return c.buildings.indexOf(id)!==-1; }) || null; }
+  function _apply() {
+    var c = active();
+    document.body.dataset.city = c.id;
+    document.body.style.setProperty('--clr-pink-core', c.accent);
+    document.body.style.setProperty('--clr-pink-bright', c.accent2);
+    document.body.style.setProperty('--clr-pink-glow', c.accent + '44');
+    var ver = document.getElementById('city-name'); if(ver) ver.textContent = c.name;
+  }
+  function setActive(id, opts) {
+    opts = opts || {};
+    if(!get(id)) return;
+    _active = id;
+    _apply();
+    renderChips();
+    CityRenderer.render();
+    if(!opts.silent && CityState.get().powered && typeof VoiceEngine!=='undefined') {
+      VoiceEngine.speak('Welcome to ' + active().name.replace(' CITY',' City') + ', ' + (window.JarvisBrain?JarvisBrain.user:'Jess') + '.');
+    }
+    CityState.pushHistory({ type:'switchCity', city:id });
+  }
+  function switchToBuilding(id) {
+    var c = cityOf(id); if(c) { _active = c.id; _apply(); renderChips(); CityRenderer.render(); }
+  }
+  function renderChips() {
+    var rail = document.getElementById('city-rail'); if(!rail) return;
+    rail.innerHTML = _cities.map(function(c){
+      return '<button class="city-chip' + (c.id===_active?' is-active':'') + '" data-city="' + c.id + '" style="--chip:'+c.accent+'">' +
+        '<span class="city-chip__icon">' + c.icon + '</span>' +
+        '<span class="city-chip__name">' + c.name + '</span></button>';
+    }).join('');
+    rail.querySelectorAll('.city-chip').forEach(function(btn){
+      btn.addEventListener('click', function(){ setActive(btn.dataset.city); });
+    });
+  }
+  function init() { _apply(); renderChips(); }
+  return { all:all, get:get, active:active, buildings:buildings, activeHas:activeHas, cityOf:cityOf, setActive:setActive, switchToBuilding:switchToBuilding, renderChips:renderChips, init:init };
 })();
 
 var Router = (function() {
@@ -73,11 +129,15 @@ var CityRenderer = (function() {
     if(!_c) return;
     _c.innerHTML = '';
     var frag = document.createDocumentFragment();
-    AgentRegistry.getAll().forEach(function(b){ frag.appendChild(_card(b)); });
+    var list = (typeof CityManager!=='undefined') ? CityManager.buildings() : AgentRegistry.getAll();
+    list.forEach(function(b){ frag.appendChild(_card(b)); });
     _c.appendChild(frag);
     var count = document.getElementById('building-count');
-    if(count) count.textContent = String(AgentRegistry.getAll().length).padStart(2,'0');
-    _c.querySelectorAll('.building-card').forEach(function(card,i){ setTimeout(function(){ card.classList.add('is-visible'); }, 100+i*60); });
+    if(count) count.textContent = String(list.length).padStart(2,'0');
+    var powered = CityState.get().powered;
+    _c.querySelectorAll('.building-card').forEach(function(card,i){
+      setTimeout(function(){ card.classList.add('is-visible'); if(powered) card.classList.add('is-powered'); }, 60+i*60);
+    });
   }
   return { init:init, render:render };
 })();
@@ -126,13 +186,16 @@ var VoicePersonality = (function() {
   function joke(){ return r(J); }
   function think(){ return r(T); }
   function agentReply(id){
-    var m={'jarvis-core':'Routing to JARVIS Core.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Heading to the Songwriting Studio. Let the music flow.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.'};
+    var m={'jarvis-core':'Routing to JARVIS Core.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Opening the Suno Helper. Let us make some music, Jess.','book-helper':'Opening the Book Helper. Let us write something that sounds truly human.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.','business-builder':'Opening the Business Builder. Let us build your brand, Jess.','app-trend-builder':'Opening the App Trend Builder. Inventing fresh ideas now.'};
     return m[id]||'Routing to your building. One moment.';
   }
   function routeSuggestion(text){
     var t=text.toLowerCase();
-    if(/lyric|song|hook|melody|music|suno|verse|chorus|rhyme/.test(t)) return 'songwriting';
-    if(/design|shirt|hoodie|brand|logo|shopify|tshirt|apparel|fashion|trend/.test(t)) return 'design-tower';
+    if(/book|novel|chapter|memoir|author|blurb|humani[sz]e|sound human|not ai|sound real/.test(t)) return 'book-helper';
+    if(/lyric|song|hook|melody|music|suno|verse|chorus|rhyme|music video|video idea/.test(t)) return 'songwriting';
+    if(/app idea|app trend|new app|build an app|startup idea|invent an app|app concept/.test(t)) return 'app-trend-builder';
+    if(/business|shopify|printable|canva|clothing line|sell|store|merch|product|niche|dropship|print on demand|pod|ecommerce|e-commerce/.test(t)) return 'business-builder';
+    if(/design|shirt|hoodie|brand|logo|tshirt|apparel|fashion|trend/.test(t)) return 'design-tower';
     if(/edit|proofread|rewrite|grammar|polish|prose/.test(t)) return 'edit-library';
     if(/research|fact|cite|data|study|source/.test(t)) return 'research-district';
     if(/project|sprint|roadmap|plan|ship|build/.test(t)) return 'project-lab';
@@ -157,14 +220,27 @@ var VoiceEngine = (function() {
   function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.92; u.pitch=opts.pitch||1.05; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
+  function _routeTo(route, reply){
+    if(typeof CityManager!=='undefined' && !CityManager.activeHas(route)) CityManager.switchToBuilding(route);
+    setTimeout(function(){
+      var bCard=document.querySelector('[data-building-id="'+route+'"]'), orb=document.getElementById('master-orb');
+      if(bCard&&orb) EnergyTrail.fire(orb,bCard);
+      setTimeout(function(){ BuildingWorkspace.open(route); speak(reply); },600);
+    }, 80);
+  }
   function processInput(text){
     if(!text.trim()) return;
     if(window.CityMemory) CityMemory.add({category:'prompt',content:text,building:'orb',title:'Prompt: '+text.slice(0,40)});
     CityState.pushHistory({type:'userInput',text:text});
     appendConvo(text,'user');
+    // 1) Explicit creative intent → open the matching building
     var route=VoicePersonality.routeSuggestion(text);
-    if(route){ var reply=VoicePersonality.agentReply(route); setOrbState('thinking'); setTimeout(function(){ var bCard=document.querySelector('[data-building-id="'+route+'"]'), orb=document.getElementById('master-orb'); if(bCard&&orb) EnergyTrail.fire(orb,bCard); setTimeout(function(){ BuildingWorkspace.open(route); speak(reply); },600); },800); }
-    else { setOrbState('thinking'); var jokes=/joke|funny|laugh|humour/.test(text.toLowerCase()); setTimeout(function(){ speak(jokes?VoicePersonality.joke():VoicePersonality.think()); },600); }
+    if(route){ setOrbState('thinking'); var reply=VoicePersonality.agentReply(route); setTimeout(function(){ _routeTo(route,reply); },700); return; }
+    // 2) Otherwise let the JARVIS brain answer anything (small talk, maths, time, help...)
+    setOrbState('thinking');
+    var res = window.JarvisBrain ? JarvisBrain.respond(text) : null;
+    if(res && res.route){ var rreply=VoicePersonality.agentReply(res.route); setTimeout(function(){ _routeTo(res.route,rreply); },700); return; }
+    setTimeout(function(){ speak((res&&res.reply)||VoicePersonality.think()); },550);
   }
   function startListening(){
     var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -208,6 +284,9 @@ var BuildingWorkspace = (function() {
     if(id==='songwriting'){ if(body){ body.innerHTML=''; if(typeof SongwritingStudio!=='undefined'){ SongwritingStudio.mount(body); if(opts.prefill){ var out=document.getElementById('ss-output'); if(out) out.textContent=opts.prefill; } } else { body.innerHTML='<p style="color:#f8a6ff;padding:2rem">Loading Songwriting Studio...</p>'; } } return; }
     if(id==='memory-vault'){ if(body){ body.innerHTML=''; if(typeof MemoryVault!=='undefined'){ MemoryVault.mount(body); } else { body.innerHTML='<p style="color:#b388ff;padding:2rem">Loading Memory Vault...</p>'; } } return; }
     if(id==='design-tower'){ if(body){ body.innerHTML=''; if(typeof DesignTower!=='undefined'){ DesignTower.mount(body,opts); } else { body.innerHTML='<p style="color:#ffcc02;padding:2rem">Loading Design Tower...</p>'; } } return; }
+    if(id==='book-helper'){ if(body){ body.innerHTML=''; if(typeof BookHelper!=='undefined'){ BookHelper.mount(body,opts); } else { body.innerHTML='<p style="color:#ffd9a0;padding:2rem">Loading Book Helper...</p>'; } } return; }
+    if(id==='business-builder'){ if(body){ body.innerHTML=''; if(typeof BusinessBuilder!=='undefined'){ BusinessBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#ffc24b;padding:2rem">Loading Business Builder...</p>'; } } return; }
+    if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#22d3ee;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
     var actionBtns=b.actions.map(function(a){ return '<button class="ws-action-btn" style="--ws-btn-color:'+b.theme.primaryColor+'">'+a+'</button>'; }).join('');
@@ -242,7 +321,7 @@ var OrbController = (function() {
     orb.addEventListener('click',function(){
       var s=CityState.get();
       if(s.orbState==='speaking'){ VoiceEngine.stopSpeaking(); return; }
-      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='powered'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(VoicePersonality.greet()); },400); }
+      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='active'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(window.JarvisBrain ? JarvisBrain.greeting() : VoicePersonality.greet()); },400); }
       else { toggle(); }
     });
   }
@@ -264,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
   ParticleField.init('particle-canvas');
   EnergyTrail.init('trail-canvas');
   CityRenderer.init('city-grid');
+  CityManager.init();
   CityRenderer.render();
   OrbController.init();
   VoiceEngine.init();
