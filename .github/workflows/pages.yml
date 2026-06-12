@@ -1,0 +1,39 @@
+name: Deploy Pages
+
+# NOTE: GitHub Pages requires the repository to be PUBLIC (on the free plan).
+# While the repo is private this deploy will fail at "Configure Pages", so it
+# is manual-only (workflow_dispatch). Make the repo public, then run it from the
+# Actions tab — it will publish to https://pizzasta.github.io/Jarvis/
+on:
+  workflow_dispatch:
+
+# Allow the workflow to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; let the newest win.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Pages (auto-enable if needed)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

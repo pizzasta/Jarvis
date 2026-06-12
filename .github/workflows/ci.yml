@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "claude/**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  syntax-check:
+    name: JS syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: node --check every JS file
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          count=0
+          for f in **/*.js; do
+            case "$f" in node_modules/*) continue;; esac
+            node --check "$f"
+            count=$((count + 1))
+          done
+          echo "✓ $count JavaScript file(s) passed node --check"
