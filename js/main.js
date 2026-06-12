@@ -27,6 +27,8 @@ var AgentRegistry = (function() {
     { id:'project-lab',       icon:'🚀', title:'PROJECT LAB',         description:'Plan, build & ship projects',    theme:{primaryColor:'#ff5252',secondaryColor:'#ff8a80'}, actions:['Plan Sprint','Roadmap','Brief','Retro'],     memory:{} },
     { id:'ops-center',        icon:'⚙️', title:'OPERATIONS CENTER', description:'Automate & orchestrate tasks',  theme:{primaryColor:'#b0bec5',secondaryColor:'#eceff1'}, actions:['Automate','Schedule','Delegate','Monitor'],  memory:{} },
     { id:'memory-vault',      icon:'💾', title:'MEMORY VAULT',        description:'Long-term context & recall',     theme:{primaryColor:'#7c4dff',secondaryColor:'#b388ff'}, actions:['Remember','Forget','Summarise','Export'],    memory:{} },
+    { id:'business-builder',  icon:'🏬', title:'BUSINESS BUILDER',    description:'Clothing, Shopify, Canva, printables & TikTok', theme:{primaryColor:'#ff2d78',secondaryColor:'#ffc24b'}, actions:['Clothing','Shopify','Printables','TikTok'], memory:{} },
+    { id:'app-trend-builder', icon:'💡', title:'APP TREND BUILDER',   description:'Brand-new app ideas, auto-generated', theme:{primaryColor:'#22d3ee',secondaryColor:'#a855f7'}, actions:['Generate','Surprise','Pin','Build'],        memory:{} },
   ];
   function getAll() { return _b; }
   function getById(id) { return _b.find(function(b){ return b.id===id; }) || null; }
@@ -39,6 +41,7 @@ var CityManager = (function() {
     { id:'creator', name:'CREATOR CITY', icon:'🎨', tagline:'Music, books & design',        accent:'#ff2d78', accent2:'#ff6bac', buildings:['songwriting','book-helper','design-tower','edit-library'] },
     { id:'mind',    name:'MIND CITY',    icon:'🧠', tagline:'Memory, research & reasoning', accent:'#9d4edd', accent2:'#c77dff', buildings:['jarvis-core','memory-vault','research-district','neural-forge'] },
     { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
+    { id:'business',name:'BUSINESS CITY',icon:'🏬', tagline:'Brands, products & income',     accent:'#ff2d78', accent2:'#ffc24b', buildings:['business-builder','app-trend-builder','design-tower','ops-center'] },
     { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] }
   ];
   var _active = 'creator';
@@ -183,14 +186,16 @@ var VoicePersonality = (function() {
   function joke(){ return r(J); }
   function think(){ return r(T); }
   function agentReply(id){
-    var m={'jarvis-core':'Routing to JARVIS Core.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Opening the Suno Helper. Let us make some music, Jess.','book-helper':'Opening the Book Helper. Let us write something that sounds truly human.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.'};
+    var m={'jarvis-core':'Routing to JARVIS Core.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Opening the Suno Helper. Let us make some music, Jess.','book-helper':'Opening the Book Helper. Let us write something that sounds truly human.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.','business-builder':'Opening the Business Builder. Let us build your brand, Jess.','app-trend-builder':'Opening the App Trend Builder. Inventing fresh ideas now.'};
     return m[id]||'Routing to your building. One moment.';
   }
   function routeSuggestion(text){
     var t=text.toLowerCase();
     if(/book|novel|chapter|memoir|author|blurb|humani[sz]e|sound human|not ai|sound real/.test(t)) return 'book-helper';
     if(/lyric|song|hook|melody|music|suno|verse|chorus|rhyme|music video|video idea/.test(t)) return 'songwriting';
-    if(/design|shirt|hoodie|brand|logo|shopify|tshirt|apparel|fashion|trend/.test(t)) return 'design-tower';
+    if(/app idea|app trend|new app|build an app|startup idea|invent an app|app concept/.test(t)) return 'app-trend-builder';
+    if(/business|shopify|printable|canva|clothing line|sell|store|merch|product|niche|dropship|print on demand|pod|ecommerce|e-commerce/.test(t)) return 'business-builder';
+    if(/design|shirt|hoodie|brand|logo|tshirt|apparel|fashion|trend/.test(t)) return 'design-tower';
     if(/edit|proofread|rewrite|grammar|polish|prose/.test(t)) return 'edit-library';
     if(/research|fact|cite|data|study|source/.test(t)) return 'research-district';
     if(/project|sprint|roadmap|plan|ship|build/.test(t)) return 'project-lab';
@@ -280,6 +285,8 @@ var BuildingWorkspace = (function() {
     if(id==='memory-vault'){ if(body){ body.innerHTML=''; if(typeof MemoryVault!=='undefined'){ MemoryVault.mount(body); } else { body.innerHTML='<p style="color:#b388ff;padding:2rem">Loading Memory Vault...</p>'; } } return; }
     if(id==='design-tower'){ if(body){ body.innerHTML=''; if(typeof DesignTower!=='undefined'){ DesignTower.mount(body,opts); } else { body.innerHTML='<p style="color:#ffcc02;padding:2rem">Loading Design Tower...</p>'; } } return; }
     if(id==='book-helper'){ if(body){ body.innerHTML=''; if(typeof BookHelper!=='undefined'){ BookHelper.mount(body,opts); } else { body.innerHTML='<p style="color:#ffd9a0;padding:2rem">Loading Book Helper...</p>'; } } return; }
+    if(id==='business-builder'){ if(body){ body.innerHTML=''; if(typeof BusinessBuilder!=='undefined'){ BusinessBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#ffc24b;padding:2rem">Loading Business Builder...</p>'; } } return; }
+    if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#22d3ee;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
     var actionBtns=b.actions.map(function(a){ return '<button class="ws-action-btn" style="--ws-btn-color:'+b.theme.primaryColor+'">'+a+'</button>'; }).join('');
