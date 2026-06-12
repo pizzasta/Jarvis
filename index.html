@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="styles/book-helper.css" />
 <link rel="stylesheet" href="styles/business-builder.css" />
 <link rel="stylesheet" href="styles/app-trend-builder.css" />
+<link rel="stylesheet" href="styles/ai.css" />
 </head>
 <body data-city-state="idle" data-orb-state="idle">
 
@@ -34,6 +35,7 @@
     <button class="hud-nav__btn" data-route="home" aria-current="page">HOME</button>
     <button class="hud-nav__btn" data-route="city">CITY</button>
     <button class="hud-nav__btn" data-route="agents">AGENTS</button>
+    <button class="hud-nav__btn hud-nav__btn--ai" id="ai-connect-btn" title="Connect a real Claude model for genuinely smart output">✨ CONNECT AI</button>
   </nav>
 </header>
 
@@ -131,6 +133,21 @@
   </div>
 </div>
 
+<div class="ai-modal" id="ai-modal" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title" hidden>
+  <div class="ai-modal__backdrop" id="ai-modal-backdrop"></div>
+  <div class="ai-modal__panel">
+    <h2 class="ai-modal__title" id="ai-modal-title">✨ Connect Claude</h2>
+    <p class="ai-modal__desc">Paste your Anthropic API key to give JARVIS a real brain. Every guide — Suno, Book, Business, App ideas, and the orb — will use <strong>Claude (Opus 4.8)</strong> for genuinely smart, original output instead of the offline templates.</p>
+    <input type="password" id="ai-key-input" class="ai-modal__input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" />
+    <div class="ai-modal__actions">
+      <button class="ai-modal__btn ai-modal__btn--primary" id="ai-save-btn">Connect</button>
+      <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-clear-btn">Disconnect</button>
+      <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-cancel-btn">Close</button>
+    </div>
+    <p class="ai-modal__note">🔒 Your key is stored only in this browser (localStorage) and sent directly to Anthropic — never to any other server. Get a key at <span class="ai-modal__link">console.anthropic.com</span>.</p>
+  </div>
+</div>
+
 <footer class="hud-bottom" aria-label="Status bar">
   <div class="hud-bottom__item"><span class="hud-bottom__key">CITY</span><span class="hud-bottom__val" id="city-name">CREATOR CITY</span></div>
   <div class="hud-bottom__item"><span class="hud-bottom__key">AGENTS</span><span class="hud-bottom__val" id="building-count">00</span></div>
@@ -139,6 +156,7 @@
 </footer>
 </div>
 
+<script src="js/ai-client.js"></script>
 <script src="js/jarvis-brain.js"></script>
 <script src="js/memory-vault.js"></script>
 <script src="js/songwriting-studio.js"></script>

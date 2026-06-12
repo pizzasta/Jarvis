@@ -346,6 +346,32 @@ var BookHelper = (function() {
     ].join('\n');
   }
 
+  function _aiSystem(){ return 'You are a bestselling human author and book coach helping Jess. Write with a genuine human voice — natural rhythm, varied sentence length, real emotion, sensory detail and subtext. Avoid AI tells: no "in conclusion", no over-explaining, no generic filler, no markdown headers. Just write the prose.'; }
+  function _aiPrompt(type){
+    var g=_state.genre, t=_state.tone, pov=_state.pov, prem=_state.premise||'(invent a compelling premise that fits)';
+    var base='Genre: '+g+'. Tone: '+t+'. POV: '+pov+'. Premise: '+prem+'.\n\n';
+    switch(type){
+      case 'Outline': return base+'Write a full book outline: a one-line hook, then a chapter-by-chapter outline (12-16 chapters), one sentence each.';
+      case 'Chapter': return base+'Write the opening of Chapter One — about 500-700 words of immersive prose that hooks the reader from the first line.';
+      case 'Blurb': return base+'Write a gripping back-cover blurb (~150 words) that would make someone buy this book.';
+      case 'Characters': return base+'Create 3 vivid main characters: name, role, one-line essence, their want vs need, and a flaw. Make them feel like real people.';
+      case 'Titles': return base+'Suggest 10 original, evocative book titles, each with a 4-6 word subtitle. No clichés.';
+      default: return base+'Help me develop this book.';
+    }
+  }
+  function _humanizeRun(src){
+    var el=document.getElementById('bh-output');
+    if(window.AIClient && AIClient.ready() && el){
+      AIClient.toOutput(el, {
+        system:'You are an expert editor who rewrites AI-sounding text so it reads like a real human wrote it. Vary sentence length, add natural rhythm and the occasional human imperfection, cut robotic transitions and filler, keep the meaning intact. Return only the rewritten text.',
+        prompt:'Rewrite the following so it sounds genuinely human, not AI-generated:\n\n'+src,
+        maxTokens:1800,
+        fallback:function(){ return humanize(src); },
+        onDone:function(t){ _save('Humanized', t); var f=document.getElementById('bh-score-fill'), v=document.getElementById('bh-score-val'); if(f) f.style.width='96%'; if(v) v.textContent='96'; }
+      });
+    } else { var out=humanize(src); _setOutput(out); _save('Humanized', out); }
+  }
+
   function _bind(){
     var ge=document.getElementById('bh-genre'), te=document.getElementById('bh-tone'), pe=document.getElementById('bh-pov'), pr=document.getElementById('bh-premise');
     if(ge) ge.addEventListener('change', function(e){ _state.genre=e.target.value; });
@@ -355,7 +381,15 @@ var BookHelper = (function() {
 
     document.querySelectorAll('.bh-tab-btn').forEach(function(b){ b.addEventListener('click', function(){ _switchTab(b.dataset.tab); }); });
 
-    var gen = function(id, fn, type){ var b=document.getElementById(id); if(b) b.addEventListener('click', function(){ var r=fn(); _setOutput(r); _save(type,r); }); };
+    var gen = function(id, fn, type){
+      var b=document.getElementById(id); if(!b) return;
+      b.addEventListener('click', function(){
+        var el=document.getElementById('bh-output');
+        if(window.AIClient && AIClient.ready() && el){
+          AIClient.toOutput(el, { system:_aiSystem(), prompt:_aiPrompt(type), maxTokens:1800, fallback:fn, onDone:function(t){ _save(type,t); } });
+        } else { var r=fn(); _setOutput(r); _save(type,r); }
+      });
+    };
     gen('bh-outline-btn', _outline, 'Outline');
     gen('bh-chapter-btn', _chapter, 'Chapter');
     gen('bh-blurb-btn', _blurb, 'Blurb');
@@ -363,10 +397,10 @@ var BookHelper = (function() {
     gen('bh-title-btn', _titles, 'Titles');
 
     var hb=document.getElementById('bh-human-btn');
-    if(hb) hb.addEventListener('click', function(){ var inp=document.getElementById('bh-human-input'); var src=inp?inp.value:''; if(!src.trim()){ _setOutput('Paste some text above first, then I will humanize it.'); return; } var out=humanize(src); _setOutput(out); _save('Humanized', out); });
+    if(hb) hb.addEventListener('click', function(){ var inp=document.getElementById('bh-human-input'); var src=inp?inp.value:''; if(!src.trim()){ _setOutput('Paste some text above first, then I will humanize it.'); return; } _humanizeRun(src); });
 
     var ho=document.getElementById('bh-humanize-out');
-    if(ho) ho.addEventListener('click', function(){ var el=document.getElementById('bh-output'); if(el&&el.textContent.trim()){ var out=humanize(el.textContent); _setOutput(out); _save('Humanized', out); } });
+    if(ho) ho.addEventListener('click', function(){ var el=document.getElementById('bh-output'); if(el&&el.textContent.trim()){ _humanizeRun(el.textContent); } });
 
     var cp=document.getElementById('bh-copy-btn'); if(cp) cp.addEventListener('click', _copyOutput);
     var sv=document.getElementById('bh-save-btn'); if(sv) sv.addEventListener('click', _saveDraft);

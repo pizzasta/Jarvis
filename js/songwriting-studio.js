@@ -397,15 +397,37 @@ const SongwritingStudio = (() => {
     if (genreEl) genreEl.addEventListener('change', e => { _state.genre = e.target.value; });
     if (moodEl)  moodEl.addEventListener('change',  e => { _state.mood  = e.target.value; });
 
-    // Generator buttons
+    // Generator buttons — real Claude when connected, offline templates otherwise.
     const _gen = (btnId, fn, type) => {
       const btn = document.getElementById(btnId);
       if (!btn) return;
       btn.addEventListener('click', () => {
-        const result = fn();
-        _setOutput(result);
-        _pushHistory(type, result);
+        const el = document.getElementById('ss-output');
+        if (window.AIClient && AIClient.ready() && el) {
+          AIClient.toOutput(el, {
+            system: 'You are an expert songwriter and Suno AI prompt engineer helping Jess. Write vivid, original, emotionally resonant material. No preamble, no markdown headers — just the content.',
+            prompt: _aiPrompt(type),
+            maxTokens: 1400,
+            fallback: fn,
+            onDone: (text) => _pushHistory(type, text)
+          });
+        } else {
+          const result = fn();
+          _setOutput(result);
+          _pushHistory(type, result);
+        }
       });
+    };
+    const _aiPrompt = (type) => {
+      const g = _state.genre, m = _state.mood;
+      switch (type) {
+        case 'Lyrics': return 'Write original song lyrics in the ' + g + ' genre with a ' + m + ' mood. Use [Verse 1], [Chorus], [Verse 2], [Bridge] section labels. Make it singable and specific — real images, not generic filler.';
+        case 'Hook': return 'Write 3 catchy, original chorus hooks for a ' + g + ' song with a ' + m + ' mood. Each 2-4 lines, instantly memorable.';
+        case 'Suno': return 'Write one optimized, copy-paste-ready Suno AI prompt for a ' + g + ' track with a ' + m + ' mood. One descriptive line covering genre, BPM, instrumentation, vocal style and production, plus a short [style] tag block.';
+        case 'Music Video': return 'Write a creative music video treatment for a ' + g + ' song with a ' + m + ' mood: logline, visual concept, 4-5 key shots, color palette, and one memorable hero moment.';
+        case 'Album': return 'Design an original album concept for a ' + g + ' artist with a ' + m + ' mood: album title, one-line concept, an 8-track tracklist with evocative titles, and the narrative arc across the record.';
+        default: return 'Help me write something great in the ' + g + ' genre with a ' + m + ' mood.';
+      }
     };
     _gen('ss-lyric-btn', generateLyric, 'Lyrics');
     _gen('ss-hook-btn',  generateHook,  'Hook');

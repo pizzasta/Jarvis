@@ -169,11 +169,38 @@ var BusinessBuilder = (function() {
     _renderHistory();
   }
 
+  function _aiPrompt(agent){
+    var ctx='Niche: '+_state.niche+'. Audience: '+_state.audience+'. Vibe: '+_state.vibe+(_state.concept?'. Concept: '+_state.concept:'')+'.\n\n';
+    var tasks={
+      clothing:'Create a clothing design brief plus a copy-paste AI image prompt for a standout apparel graphic.',
+      shopify:'Write a full Shopify product listing: SEO title, tags, a persuasive description, a bundle offer and a store-name idea.',
+      canva:'Give 5 specific Canva post/design concepts with layout, fonts and colour direction.',
+      printable:'Recommend the best printable / print-on-demand products for this niche, with formats, where to sell, and pricing.',
+      tiktok:'Write a TikTok content plan: 5 scroll-stopping hooks, a content-series idea, and a posting cadence.',
+      brand:'Build a brand kit: 4 name ideas, 3 taglines, a colour palette (hex), font pairing and brand voice.',
+      niche:'Validate this niche: why it works, the best first product, sub-niches to own, and how to test demand cheaply.',
+      pricing:'Give pricing & margins: price points for the core products, bundle maths, and a launch offer.',
+      marketing:'Write a 7-day launch calendar across TikTok, email and Pinterest.',
+      email:'Write a welcome email plus a 2-step abandoned-cart flow plus one SMS, all ready to use.',
+      ads:'Write ad copy for Meta, TikTok and Google — headlines, primary text and a short script.'
+    };
+    return ctx + (tasks[agent.id] || ('Help me with '+agent.name+'.'));
+  }
   function _run(){
     var agent = AGENTS.find(function(x){ return x.id===_state.agent; }) || AGENTS[0];
-    var out = _gen(_state.agent);
-    _setOutput(out);
-    _save(agent.name, out);
+    var el = document.getElementById('bb-output');
+    if(window.AIClient && AIClient.ready() && el){
+      AIClient.toOutput(el, {
+        system:'You are an elite e-commerce and brand strategist helping Jess build a real business. Be specific, actionable and original — real names, real numbers, real copy. No fluff, no markdown headers.',
+        prompt:_aiPrompt(agent), maxTokens:1600,
+        fallback:function(){ return _gen(_state.agent); },
+        onDone:function(t){ _save(agent.name, t); }
+      });
+    } else {
+      var out = _gen(_state.agent);
+      _setOutput(out);
+      _save(agent.name, out);
+    }
   }
 
   function _copy(){ var el=document.getElementById('bb-output'); if(!el||!el.textContent.trim()) return; navigator.clipboard.writeText(el.textContent).then(function(){ var b=document.getElementById('bb-copy'); if(b){ b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; },1400); } }); }

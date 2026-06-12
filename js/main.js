@@ -217,7 +217,24 @@ var VoiceEngine = (function() {
   loadV();
   function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'JARVIS'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
   function appendConvo(msg,role){ var p=document.getElementById('convo-messages'); if(!p)return; var d=document.createElement('div'); d.className='convo-msg convo-msg--'+(role==='user'?'user':'ai'); d.textContent=msg; p.appendChild(d); p.scrollTop=p.scrollHeight; }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.92; u.pitch=opts.pitch||1.05; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
+  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.92; u.pitch=opts.pitch||1.05; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; if(!opts.noAppend) appendConvo(text,'ai'); _synth.speak(u); }
+  function _aiAnswer(text){
+    var p=document.getElementById('convo-messages'), bubble=null;
+    if(p){ bubble=document.createElement('div'); bubble.className='convo-msg convo-msg--ai ai-streaming'; p.appendChild(bubble); p.scrollTop=p.scrollHeight; }
+    var user = window.JarvisBrain ? JarvisBrain.user : 'Jess';
+    AIClient.stream({
+      system:'You are JARVIS, '+user+"'s personal AI assistant — a warm, witty British butler. Always address her as "+user+". Answer anything helpfully and accurately. Keep spoken replies concise (2-4 sentences) unless she asks for more. Plain text only — no markdown, no emoji.",
+      prompt:text, maxTokens:1000,
+      onText:function(d,full){ if(bubble){ bubble.textContent=full; if(p) p.scrollTop=p.scrollHeight; } }
+    }).then(function(full){
+      if(bubble) bubble.classList.remove('ai-streaming');
+      speak(full,{noAppend:true});
+    }).catch(function(err){
+      if(bubble){ if(!bubble.textContent) bubble.remove(); else bubble.classList.remove('ai-streaming'); }
+      var res=window.JarvisBrain?JarvisBrain.respond(text):null;
+      speak((res&&res.reply)||('My apologies, '+user+' — I could not reach Claude just then.'));
+    });
+  }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
@@ -240,6 +257,7 @@ var VoiceEngine = (function() {
     setOrbState('thinking');
     var res = window.JarvisBrain ? JarvisBrain.respond(text) : null;
     if(res && res.route){ var rreply=VoicePersonality.agentReply(res.route); setTimeout(function(){ _routeTo(res.route,rreply); },700); return; }
+    if(window.AIClient && AIClient.ready()){ _aiAnswer(text); return; }
     setTimeout(function(){ speak((res&&res.reply)||VoicePersonality.think()); },550);
   }
   function startListening(){
@@ -321,13 +339,36 @@ var OrbController = (function() {
     orb.addEventListener('click',function(){
       var s=CityState.get();
       if(s.orbState==='speaking'){ VoiceEngine.stopSpeaking(); return; }
-      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='active'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(window.JarvisBrain ? JarvisBrain.greeting() : VoicePersonality.greet()); },400); }
+      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='active'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(window.JarvisBrain ? JarvisBrain.greeting() : VoicePersonality.greet()); if(window.AIClient && !AIClient.ready()){ setTimeout(function(){ VoiceEngine.speak('Tip: tap Connect A.I. up top to give me a real Claude brain for smarter answers.'); },4200); } },400); }
       else { toggle(); }
     });
   }
   function shockwave(){ var orb=document.getElementById('master-orb'); if(!orb)return; var sw=document.createElement('div'); sw.className='orb-shockwave'; orb.appendChild(sw); setTimeout(function(){ sw.remove(); },900); }
   function toggle(){ var s=CityState.get(); if(s.orbState==='listening') VoiceEngine.stopListening(); else VoiceEngine.startListening(); }
   return { init:init, shockwave:shockwave };
+})();
+
+var AISettings = (function() {
+  function refresh(){
+    var on = !!(window.AIClient && AIClient.ready());
+    document.body.dataset.ai = on ? 'on' : 'off';
+    var b=document.getElementById('ai-connect-btn'); if(b) b.textContent = on ? '✨ AI ON' : '✨ CONNECT AI';
+  }
+  function open(){ var m=document.getElementById('ai-modal'); if(!m)return; var inp=document.getElementById('ai-key-input'); if(inp&&window.AIClient) inp.value=AIClient.getKey(); m.removeAttribute('hidden'); }
+  function close(){ var m=document.getElementById('ai-modal'); if(m) m.setAttribute('hidden',''); }
+  function init(){
+    var btn=document.getElementById('ai-connect-btn'); if(btn) btn.addEventListener('click',open);
+    var bd=document.getElementById('ai-modal-backdrop'); if(bd) bd.addEventListener('click',close);
+    var cancel=document.getElementById('ai-cancel-btn'); if(cancel) cancel.addEventListener('click',close);
+    var save=document.getElementById('ai-save-btn'); if(save) save.addEventListener('click',function(){
+      var inp=document.getElementById('ai-key-input'); if(inp&&window.AIClient) AIClient.setKey(inp.value); refresh(); close();
+      if(window.AIClient && AIClient.ready() && CityState.get().powered) VoiceEngine.speak('Claude connected. I am fully online now, '+(window.JarvisBrain?JarvisBrain.user:'Jess')+'.');
+    });
+    var clr=document.getElementById('ai-clear-btn'); if(clr) clr.addEventListener('click',function(){ if(window.AIClient) AIClient.clearKey(); var inp=document.getElementById('ai-key-input'); if(inp) inp.value=''; refresh(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+    refresh();
+  }
+  return { init:init, refresh:refresh };
 })();
 
 var Routes = (function() {
@@ -350,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
   BuildingWorkspace.init();
   Router.init();
   Routes.init();
+  AISettings.init();
   HUD.init();
   CityState.subscribe(HUD.upd);
   console.log('[JARVIS] City v3.1 - Memory Vault + Design Tower online.');

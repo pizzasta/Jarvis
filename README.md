@@ -48,6 +48,20 @@ Switch cities from the rail near the top. Each city has its own buildings:
    features, monetization, a viral growth hook, MVP scope and a tech stack. Generate one
    or five at a time, pin the winners, or send to Project Lab.
 
+## Make it genuinely smart — Connect AI
+
+By default every guide works **offline** using built-in generators, so the app
+runs with zero setup. For genuinely intelligent, original output, tap
+**✨ Connect AI** in the top bar and paste your own **Anthropic API key**:
+
+- The orb's "ask anything" and all four guides (Suno, Book, Business, App ideas)
+  then call **Claude (Opus 4.8)** directly and **stream** the answer live.
+- The **Book Helper's Humanizer** uses Claude to rewrite AI-sounding text so it
+  reads like a real person — the headline "sound human, not AI" feature.
+- Your key is stored **only in your browser** (localStorage) and sent **directly
+  to Anthropic** — never to any other server. Get a key at console.anthropic.com.
+- No key? Everything still works with the offline generators.
+
 ## Voice & "ask anything"
 
 - British-accented greeting that says **Hello Jess** on power-on.
