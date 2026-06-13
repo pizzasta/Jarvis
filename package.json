@@ -1,0 +1,12 @@
+{
+  "name": "jarvis-diva",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DIVA — JARVIS AI City: static app + zero-dependency Node proxy (Claude + ElevenLabs voice).",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

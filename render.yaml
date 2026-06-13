@@ -1,0 +1,15 @@
+# One-click deploy on Render (https://render.com) — free tier works.
+# New + > Blueprint > pick this repo. Then add the two secret keys.
+services:
+  - type: web
+    name: jarvis-diva
+    runtime: node
+    plan: free
+    startCommand: node server.js
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false          # set in Render dashboard (live Claude answers)
+      - key: ELEVENLABS_API_KEY
+        sync: false          # set in Render dashboard (human DIVA voice)
+      - key: ALLOWED_ORIGIN
+        value: "*"           # or your GitHub Pages origin, e.g. https://pizzasta.github.io
