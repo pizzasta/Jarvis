@@ -40,9 +40,9 @@ var AIClient = (function() {
       .catch(function() { _available = false; _model = null; _tts = false; _markets = false; return false; });
   }
 
-  function available() { return _available === true; }
-  function offline()   { return _available !== true; }   // true in demo mode
-  function model()     { return _model; }
+  function available() { return _available === true || !!getKey(); }   // server OR browser key
+  function offline()   { return !available(); }
+  function model()     { return _model || (getKey() ? 'claude-opus-4-8' : null); }
   function ttsAvailable() { return _tts === true; }
   function marketsAvailable() { return _markets === true; }
 
@@ -71,30 +71,61 @@ var AIClient = (function() {
     }).then(function(b) { return URL.createObjectURL(b); });
   }
 
-  // opts: { system, prompt, max_tokens } -> Promise<string>
-  // Rejects in offline mode; callers should check available() first and show
-  // their own demo placeholder, but this guard means a stray call won't 404.
-  function generate(opts) {
-    if (offline()) {
-      return Promise.reject(new Error('AI offline — running in demo mode (no backend). Run "node server.js" with an API key to enable live generation.'));
-    }
-    return fetch(_base()+'/api/generate', {
+  // ---- Bring-your-own-key: call Claude DIRECTLY from the browser ----
+  // Lets the agents work on the static site (GitHub Pages) with no server.
+  // The key is stored only in this browser (localStorage) and sent only to
+  // Anthropic. A hosted server proxy, when present, always takes priority.
+  var KEY_STORE = 'diva_anthropic_key';
+  function getKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+  function setKey(k) { try { if (k) localStorage.setItem(KEY_STORE, String(k).trim()); else localStorage.removeItem(KEY_STORE); } catch (e) {} }
+  function clearKey() { try { localStorage.removeItem(KEY_STORE); } catch (e) {} }
+  function _serverOn() { return _available === true; }
+
+  function _direct(opts) {
+    var key = getKey();
+    return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        system: opts.system,
-        prompt: opts.prompt,
-        max_tokens: opts.max_tokens || 1200
+        model: 'claude-opus-4-8',
+        max_tokens: Math.min(parseInt(opts.max_tokens, 10) || 1200, 4000),
+        system: opts.system || 'You are DIVA, a sharp, witty British AI assistant.',
+        messages: [{ role: 'user', content: String(opts.prompt || '') }]
       })
     }).then(function(r) {
       return r.json().catch(function(){ return {}; }).then(function(j) {
-        if (!r.ok) throw new Error(j.error || ('AI error ' + r.status));
-        return j.text;
+        if (!r.ok) throw new Error((j.error && j.error.message) || ('AI error ' + r.status));
+        if (j.stop_reason === 'refusal') return 'I had to decline that one, boss. Let us try a different angle.';
+        return (j.content || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('\n').trim();
       });
     });
   }
 
-  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap };
+  // opts: { system, prompt, max_tokens } -> Promise<string>
+  function generate(opts) {
+    opts = opts || {};
+    if (_serverOn()) {
+      return fetch(_base()+'/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: opts.system, prompt: opts.prompt, max_tokens: opts.max_tokens || 1200 })
+      }).then(function(r) {
+        return r.json().catch(function(){ return {}; }).then(function(j) {
+          if (!r.ok) throw new Error(j.error || ('AI error ' + r.status));
+          return j.text;
+        });
+      });
+    }
+    if (getKey()) return _direct(opts);
+    return Promise.reject(new Error('AI offline — tap "Connect AI" and paste your Anthropic API key, or run the server.'));
+  }
+
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey };
 })();
 
 window.AIClient = AIClient;
