@@ -1,0 +1,419 @@
+/* ═══════════════════════════════════════════════════════════
+   SKYLINE CITY — neon-pink futuristic cityscape
+   Turns the AI-agent buildings into glowing skyline towers and
+   rebuilds the background (nebula sky, stars, light-trail highways)
+   to match the JARVIS pink-city look. Loaded after city.css so it wins.
+═══════════════════════════════════════════════════════════ */
+
+/* ── Nebula night sky ─────────────────────────────────────── */
+.bg-deep {
+  background:
+    radial-gradient(ellipse 50% 40% at 22% 14%, rgba(255,45,120,0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 70% 10%, rgba(157,78,221,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 30% at 50% 6%,  rgba(255,170,60,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 55% at 50% 105%, rgba(255,45,120,0.12) 0%, transparent 65%),
+    linear-gradient(180deg, #07041c 0%, #0c0524 45%, #170a2e 78%, #220c33 100%) !important;
+}
+
+/* drifting nebula colour clouds */
+.nebula-clouds {
+  position: fixed; inset: 0;
+  z-index: var(--z-bg);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 38% 26% at 18% 18%, rgba(224,64,251,0.18), transparent 70%),
+    radial-gradient(ellipse 30% 22% at 78% 14%, rgba(0,160,255,0.10), transparent 70%),
+    radial-gradient(ellipse 26% 20% at 55% 8%,  rgba(255,120,40,0.10), transparent 70%);
+  filter: blur(8px);
+  opacity: 0.85;
+  animation: nebula-drift 40s ease-in-out infinite alternate;
+}
+@keyframes nebula-drift {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce){ .nebula-clouds { animation: none; } }
+
+/* ── Starfield ────────────────────────────────────────────── */
+.bg-mid {
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #ffffff 50%, transparent),
+    radial-gradient(1.5px 1.5px at 27% 9%,  rgba(255,220,255,0.9) 50%, transparent),
+    radial-gradient(1px 1px   at 41% 22%,  #ffffff 50%, transparent),
+    radial-gradient(2px 2px   at 58% 12%,  rgba(180,220,255,0.9) 50%, transparent),
+    radial-gradient(1px 1px   at 69% 26%,  #ffffff 50%, transparent),
+    radial-gradient(1.5px 1.5px at 81% 8%, rgba(255,200,240,0.9) 50%, transparent),
+    radial-gradient(1px 1px   at 90% 20%,  #ffffff 50%, transparent),
+    radial-gradient(1px 1px   at 5% 33%,   #ffffff 50%, transparent),
+    radial-gradient(1.5px 1.5px at 34% 30%,#ffffff 50%, transparent),
+    radial-gradient(1px 1px   at 48% 4%,   rgba(200,200,255,0.9) 50%, transparent),
+    radial-gradient(1px 1px   at 64% 33%,  #ffffff 50%, transparent),
+    radial-gradient(2px 2px   at 75% 16%,  #ffffff 50%, transparent),
+    radial-gradient(1px 1px   at 96% 6%,   #ffffff 50%, transparent) !important;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+  animation: star-twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes star-twinkle { 0%{opacity:0.55;} 100%{opacity:0.95;} }
+@media (prefers-reduced-motion: reduce){ .bg-mid { animation: none; } }
+
+/* far/distant skyline — pushed back and dimmed behind the agent towers */
+.skyline { height: 42vh; opacity: 0.55; filter: blur(0.4px) saturate(1.3); }
+body[data-city-state="active"] .skyline { opacity: 0.8; }
+
+/* ── Light-trail highways (foreground) ────────────────────── */
+.city-highways {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 30vh;
+  z-index: var(--z-skyline);
+  pointer-events: none;
+  perspective: 320px;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 35%, #000 100%);
+}
+.hw-deck {
+  position: absolute;
+  left: -20%; right: -20%; bottom: -10%;
+  height: 120%;
+  transform: rotateX(62deg);
+  transform-origin: bottom center;
+}
+.hw-lane {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 200%;
+  width: 8px;
+  border-radius: 8px;
+  transform-origin: bottom center;
+  background: repeating-linear-gradient(180deg, transparent 0 18px, var(--hw,#ff2d78) 18px 34px, #ff9ad8 34px 38px);
+  filter: blur(1px) drop-shadow(0 0 9px var(--hw,#ff2d78));
+  opacity: 0.55;
+  animation: hw-flow 1.4s linear infinite;
+}
+.hw-lane--1 { transform: translateX(-46vw) rotate(20deg);  --hw:#ff2d78; animation-delay: 0s;    }
+.hw-lane--2 { transform: translateX(-22vw) rotate(9deg);   --hw:#ff5fb0; animation-delay: -0.7s; }
+.hw-lane--3 { transform: translateX(0)     rotate(0deg);   --hw:#ff2d78; animation-delay: -1.4s; height: 220%; }
+.hw-lane--4 { transform: translateX(22vw)  rotate(-9deg);  --hw:#e040fb; animation-delay: -2.1s; }
+.hw-lane--5 { transform: translateX(46vw)  rotate(-20deg); --hw:#ff5fb0; animation-delay: -2.8s; }
+@keyframes hw-flow {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 -56px; }
+}
+body[data-city-state="active"] .hw-lane { opacity: 0.8; }
+@media (prefers-reduced-motion: reduce){ .hw-lane { animation: none; opacity: 0.5; } }
+
+/* ── CITY GRID → skyline of agent towers ──────────────────── */
+.city-grid {
+  align-items: flex-end !important;
+  justify-content: center;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+  padding: 0 var(--sp-4) 0 !important;
+  overflow: visible !important;
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+}
+/* neon ground line beneath the towers */
+.city-grid::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--clr-pink-core), var(--clr-pink-bright), var(--clr-pink-core), transparent);
+  box-shadow: 0 0 18px var(--clr-pink-core);
+  opacity: 0.5;
+}
+body[data-city-state="active"] .city-grid::after { opacity: 0.95; }
+/* wet-ground reflective glow under the towers */
+.city-grid::before {
+  content: '';
+  position: absolute;
+  left: 4%; right: 4%; bottom: -30px;
+  height: 30px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--clr-pink-core) 26%, transparent), transparent);
+  filter: blur(12px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
+
+/* ── A single agent TOWER ─────────────────────────────────── */
+.building-card {
+  width: clamp(74px, 11vw, 124px) !important;
+  height: 400px;
+  padding: 0 !important;
+  margin: 0 -2px !important;
+  border: none !important;
+  border-radius: 4px 4px 0 0 !important;
+  background:
+    /* glass sheen highlight, top-left */
+    linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 16%, transparent 40%),
+    /* 3D volume: lit left face → shadowed right face */
+    linear-gradient(90deg, rgba(255,255,255,0.16) 0%, transparent 30%, transparent 62%, rgba(0,0,0,0.42) 88%, rgba(0,0,0,0.62) 100%),
+    /* dark glass body, brighter at the street base */
+    linear-gradient(180deg, #2a1340 0%, #16091f 62%, #0b0415 100%) !important;
+  backdrop-filter: none !important;
+  overflow: visible;
+  align-items: center;
+  justify-content: flex-end;
+  clip-path: polygon(50% 0, 100% 12%, 100% 100%, 0 100%, 0 12%); /* default crown */
+  filter:
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))                                              /* right shadow face = depth */
+    drop-shadow(-1px 0 0 color-mix(in srgb, var(--building-color-2,#fff) 22%, transparent)) /* left edge highlight */
+    drop-shadow(0 0 10px color-mix(in srgb, var(--building-color) 55%, transparent))
+    drop-shadow(0 3px 30px color-mix(in srgb, var(--building-color) 28%, transparent));
+  transition: filter var(--t-normal) ease, transform var(--t-normal) cubic-bezier(0.34,1.56,0.64,1);
+  transform: translateY(0) !important;
+}
+.building-card.is-visible { opacity: 1; }
+
+/* realistic lit-window grid: bright window panes carved by dark mullions,
+   brighter toward the street base + an emissive crown band */
+.building-card::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 6% 12% 3% 12%;
+  background-image:
+    /* every ~3rd column dimmed → not every room is lit (looks real) */
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(18,1,11,0.6) 16px 25px),
+    /* vertical mullions (dark frames between windows) */
+    repeating-linear-gradient(90deg, rgba(8,1,12,0.96) 0 2px, transparent 2px 8px),
+    /* lit window floors in dark pink, with dark inter-floor gaps */
+    repeating-linear-gradient(0deg, rgba(255,45,120,0.96) 0 4px, rgba(22,2,14,0.94) 4px 9px),
+    /* warm room glow inside, brighter at street + crown */
+    linear-gradient(180deg, rgba(255,45,120,0.55) 0%, rgba(214,17,96,0.16) 20%, rgba(214,17,96,0.16) 64%, rgba(255,45,120,0.65) 100%);
+  opacity: 0.3;
+  border-radius: inherit;
+  transition: opacity var(--t-slow) ease;
+}
+body[data-city-state="active"] .building-card::before {
+  opacity: 1;
+  animation: tower-flicker 5s ease-in-out infinite;
+}
+/* dark-pink window bloom seeping out when the city is powered */
+body[data-city-state="active"] .building-card {
+  box-shadow: 0 0 22px rgba(255,45,120,0.12) inset;
+}
+.building-card:nth-child(2n)::before { animation-delay: 1.3s; }
+.building-card:nth-child(3n)::before { animation-delay: 2.1s; }
+@keyframes tower-flicker {
+  0%,100% { opacity: 0.9; }
+  35%     { opacity: 1; }
+  55%     { opacity: 0.78; }
+  70%     { opacity: 0.97; }
+}
+@media (prefers-reduced-motion: reduce){ body[data-city-state="active"] .building-card::before { animation: none; } }
+
+/* glowing vertical spine + crown beacon */
+.building-card::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 4%; bottom: 0; left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, var(--building-color-2, #fff), var(--building-color) 30%, transparent);
+  box-shadow: 0 0 10px var(--building-color);
+  opacity: 0.6;
+  border-radius: 3px;
+}
+body[data-city-state="active"] .building-card::after { opacity: 1; }
+
+/* crown emblem (agent icon) */
+.building-card__icon {
+  position: absolute;
+  top: 13%;
+  font-size: clamp(0.9rem, 2vw, 1.4rem) !important;
+  filter: drop-shadow(0 0 8px var(--building-color)) !important;
+  z-index: 2;
+}
+
+/* vertical neon agent sign */
+.building-card__title {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--font-hud) !important;
+  font-size: 0.46rem !important;
+  letter-spacing: 0.18em !important;
+  color: #fff !important;
+  text-shadow: 0 0 8px var(--building-color), 0 0 16px var(--building-color);
+  max-height: 64%;
+  overflow: hidden;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.building-card__desc { display: none !important; }
+
+/* action tags clipped by the tower silhouette — hide; the neon name is the identity */
+.building-card__actions { display: none !important; }
+.building-card:hover .building-card__title,
+.building-card:focus-visible .building-card__title { font-size: 0.52rem !important; }
+
+/* base uplight */
+.building-card__glow {
+  width: 120% !important;
+  height: 30px !important;
+  bottom: -6px !important;
+  filter: blur(12px) !important;
+  opacity: 0.5 !important;
+}
+body[data-city-state="active"] .building-card__glow { opacity: 0.9 !important; }
+.building-card__line { display: none !important; }
+
+/* hover / active lift (keep the 3D depth edges, add bloom) */
+.building-card:hover,
+.building-card:focus-visible {
+  transform: translateY(-12px) !important;
+  filter:
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(0 0 26px var(--building-color))
+    drop-shadow(0 0 68px color-mix(in srgb, var(--building-color) 55%, transparent))
+    brightness(1.16);
+  z-index: 6;
+}
+.building-card.is-active {
+  filter:
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(0 0 30px var(--building-color))
+    drop-shadow(0 0 80px color-mix(in srgb, var(--building-color) 60%, transparent))
+    brightness(1.22);
+}
+body[data-city-state="active"] .building-card {
+  filter:
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(-1px 0 0 color-mix(in srgb, var(--building-color-2,#fff) 22%, transparent))
+    drop-shadow(0 0 16px var(--building-color))
+    drop-shadow(0 0 50px color-mix(in srgb, var(--building-color) 45%, transparent));
+}
+
+/* height + silhouette variety across the 4 towers per city */
+.building-card:nth-child(4n+1) { height: 400px; clip-path: polygon(50% 0, 100% 10%, 100% 100%, 0 100%, 0 10%); }
+.building-card:nth-child(4n+2) { height: 500px; clip-path: polygon(38% 4%, 62% 0, 100% 9%, 100% 100%, 0 100%, 0 9%); }
+.building-card:nth-child(4n+3) { height: 360px; clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%); }
+.building-card:nth-child(4n+4) { height: 460px; clip-path: polygon(50% 0, 56% 6%, 100% 6%, 100% 100%, 0 100%, 0 14%, 44% 14%, 44% 6%); }
+
+/* lift the orb above the taller skyline */
+.orb-wrapper { top: 33% !important; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .building-card { height: 300px; }
+  .building-card:nth-child(4n+1) { height: 300px; }
+  .building-card:nth-child(4n+2) { height: 360px; }
+  .building-card:nth-child(4n+3) { height: 260px; }
+  .building-card:nth-child(4n+4) { height: 330px; }
+  .city-highways { height: 24vh; }
+  .orb-wrapper { top: 32% !important; }
+}
+@media (max-width: 480px) {
+  .building-card__title { font-size: 0.42rem !important; }
+  .building-card,
+  .building-card:nth-child(4n+1) { height: 240px; }
+  .building-card:nth-child(4n+2) { height: 290px; }
+  .building-card:nth-child(4n+3) { height: 210px; }
+  .building-card:nth-child(4n+4) { height: 268px; }
+}
+
+/* ── Volumetric clouds & atmosphere ───────────────────────── */
+/* low clouds rolling through the skyline (parallax depth) */
+.city-fog {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 62vh;
+  z-index: var(--z-skyline);
+  pointer-events: none;
+  overflow: hidden;
+}
+.fog {
+  position: absolute;
+  left: -30%; right: -30%;
+  border-radius: 50%;
+  will-change: transform;
+}
+.fog--far {
+  bottom: 34%; height: 34%;
+  background:
+    radial-gradient(ellipse 60% 100% at 28% 55%, rgba(255,120,200,0.13), transparent 70%),
+    radial-gradient(ellipse 55% 100% at 72% 45%, rgba(170,90,255,0.11), transparent 72%);
+  filter: blur(34px);
+  opacity: 0.55;
+  animation: fog-drift-far 54s ease-in-out infinite;
+}
+.fog--mid {
+  bottom: 16%; height: 32%;
+  background: radial-gradient(ellipse 70% 100% at 50% 60%, rgba(255,90,170,0.17), transparent 72%);
+  filter: blur(28px);
+  opacity: 0.6;
+  animation: fog-drift-mid 40s ease-in-out infinite;
+}
+.fog--near {
+  bottom: -2%; height: 30%;
+  background:
+    linear-gradient(0deg, rgba(18,4,28,0.7), transparent 80%),
+    radial-gradient(ellipse 85% 100% at 42% 80%, rgba(255,140,210,0.18), transparent 70%);
+  filter: blur(20px);
+  opacity: 0.62;
+  animation: fog-drift-near 30s ease-in-out infinite;
+}
+@keyframes fog-drift-far  { 0%,100%{ transform: translateX(-7%); } 50%{ transform: translateX(7%); } }
+@keyframes fog-drift-mid  { 0%,100%{ transform: translateX(8%);  } 50%{ transform: translateX(-8%); } }
+@keyframes fog-drift-near { 0%,100%{ transform: translateX(-5%); } 50%{ transform: translateX(6%); } }
+body[data-city-state="active"] .fog { opacity: 0.7; }
+
+/* high wispy cloud band drifting across the sky */
+.sky-wisp {
+  position: fixed;
+  top: 8%; left: -40%;
+  width: 180%; height: 22%;
+  z-index: var(--z-bg);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 30% 60% at 20% 50%, rgba(255,180,230,0.10), transparent 70%),
+    radial-gradient(ellipse 26% 55% at 55% 45%, rgba(200,170,255,0.09), transparent 72%),
+    radial-gradient(ellipse 22% 50% at 82% 55%, rgba(255,200,160,0.07), transparent 72%);
+  filter: blur(22px);
+  opacity: 0.8;
+  animation: wisp-drift 90s linear infinite;
+}
+@keyframes wisp-drift { from{ transform: translateX(0); } to{ transform: translateX(22%); } }
+
+@media (prefers-reduced-motion: reduce){
+  .fog, .sky-wisp { animation: none; }
+}
+@media (max-width: 768px){
+  .city-fog { height: 50vh; }
+}
+
+/* ── Agent console (every building is a real agent that saves info) ── */
+.agent-console{--c:var(--ws-color,#ff2d78);--c2:var(--ws-color-2,#ff6bac);display:flex;flex-direction:column;gap:.9rem;font-family:'Rajdhani',sans-serif;color:#f3e9f5;}
+.agent-console__head{display:flex;align-items:center;gap:.85rem;}
+.agent-console__icon{font-size:2rem;filter:drop-shadow(0 0 12px var(--c));}
+.agent-console__id{flex:1;min-width:0;}
+.agent-console__name{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.1em;font-size:clamp(.95rem,2.4vw,1.3rem);background:linear-gradient(135deg,var(--c),var(--c2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.agent-console__desc{font-size:.8rem;color:#b58fb0;margin-top:.15rem;}
+.agent-console__status{display:flex;align-items:center;gap:.4rem;font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.18em;color:var(--c2);border:1px solid color-mix(in srgb,var(--c) 40%,transparent);border-radius:20px;padding:.28rem .6rem;white-space:nowrap;}
+.agent-console__dot{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:ac-pulse 1.8s ease-in-out infinite;}
+@keyframes ac-pulse{50%{opacity:.4;}}
+.agent-console__chips{display:flex;gap:.45rem;flex-wrap:wrap;}
+.ws-chip{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.07em;text-transform:uppercase;padding:.42rem .8rem;border-radius:7px;cursor:pointer;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 12%,rgba(8,2,14,.6));color:var(--c2);transition:all .18s;}
+.ws-chip:hover{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent);transform:translateY(-1px);}
+.ws-chip--primary{background:linear-gradient(135deg,var(--c),var(--c2));color:#0a0410;font-weight:800;border:none;}
+.agent-console__lbl,.agent-console__loglbl{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#b58fb0;}
+.agent-console__input{background:rgba(255,45,120,.06);border:1px solid color-mix(in srgb,var(--c) 30%,transparent);border-radius:10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:.92rem;padding:.7rem .85rem;outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s;}
+.agent-console__input:focus{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent);}
+.agent-console__acts{display:flex;align-items:center;gap:.7rem;}
+.agent-console__count{font-size:.7rem;color:#b58fb0;}
+.agent-console__log{display:flex;flex-direction:column;gap:.5rem;max-height:300px;overflow-y:auto;}
+.agent-console__empty{font-size:.8rem;color:#9a7596;font-style:italic;padding:.4rem 0;}
+.agent-console__item{position:relative;background:rgba(255,45,120,.05);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);border-left:3px solid var(--c);border-radius:8px;padding:.55rem .7rem .55rem .8rem;}
+.agent-console__time{font-size:.58rem;letter-spacing:.05em;color:#9a7596;}
+.agent-console__text{font-size:.9rem;color:#f3e9f5;line-height:1.5;margin-top:.2rem;white-space:pre-wrap;word-break:break-word;padding-right:1.2rem;}
+.agent-console__del{position:absolute;top:.4rem;right:.45rem;width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:#9a7596;font-size:1rem;line-height:1;cursor:pointer;transition:color .15s;}
+.agent-console__del:hover{color:var(--c);}

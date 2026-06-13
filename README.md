@@ -17,6 +17,11 @@ python3 -m http.server 8000
 Click the **JARVIS orb** in the centre to power on the city and hear the greeting.
 Use the **mic** (orb or the input bar) to ask anything, or type a message.
 
+The scene is a neon-pink futuristic **cityscape**: a nebula starfield sky with drifting
+clouds, flowing light-trail highways, and a skyline of 3D glowing towers with lit windows
+— **each tower is an AI agent**. Click a tower to open that guide; power on to light the
+windows. Switching cities swaps which agents (towers) appear.
+
 ## Cities & buildings
 
 Switch cities from the rail near the top. Each city has its own buildings:

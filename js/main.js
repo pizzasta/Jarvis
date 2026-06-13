@@ -13,7 +13,7 @@ var CityState = (function() {
 
 var AgentRegistry = (function() {
   var _b = [
-    { id:'jarvis-core',       icon:'🧠', title:'JARVIS CORE',         description:'Master intelligence hub',         theme:{primaryColor:'#ff2d78',secondaryColor:'#ff6bac'}, actions:['Think','Analyse','Respond','Learn'],          memory:{} },
+    { id:'jarvis-core',       icon:'🧠', title:'DIVA CORE',         description:'Master intelligence hub',         theme:{primaryColor:'#ff2d78',secondaryColor:'#ff6bac'}, actions:['Think','Analyse','Respond','Learn'],          memory:{} },
     { id:'vision-lab',        icon:'👁', title:'VISION LAB',          description:'Visual perception engine',        theme:{primaryColor:'#00e5ff',secondaryColor:'#40ffff'}, actions:['Detect','Classify','Scan','Render'],         memory:{} },
     { id:'data-vault',        icon:'🗄', title:'DATA VAULT',          description:'Memory & knowledge store',        theme:{primaryColor:'#9d4edd',secondaryColor:'#c77dff'}, actions:['Store','Recall','Index','Forget'],           memory:{} },
     { id:'neural-forge',      icon:'⚡',    title:'NEURAL FORGE',        description:'Training & optimisation',         theme:{primaryColor:'#ffd700',secondaryColor:'#fff176'}, actions:['Train','Tune','Compile','Benchmark'],        memory:{} },
@@ -178,7 +178,7 @@ var EnergyTrail = (function() {
 })();
 
 var VoicePersonality = (function() {
-  var G=['Good day. JARVIS online. How may I assist?','Hello there. All systems nominal. What do you need?','Right then. Fully operational. What shall we tackle?'];
+  var G=['Ello Jess, at your service, boss bitch. Kettle is on, love — what are we building?','Hello Jess, at your service, boss bitch. Proper chuffed to see you, darling.','Hello Jess, at your service, boss bitch. Right then, let us get cracking, shall we?'];
   var J=['Why do programmers prefer dark mode? Light attracts bugs.','I tried to write a pun about neural networks. My humour is still in training.','They say AI will take over the world. I am just sorting your tasks.'];
   var T=['Hmm, let me process that...','Interesting. Give me a moment...','Running analysis now...','Ah yes, I know precisely what to do here.'];
   function r(a){ return a[Math.floor(Math.random()*a.length)]; }
@@ -186,7 +186,7 @@ var VoicePersonality = (function() {
   function joke(){ return r(J); }
   function think(){ return r(T); }
   function agentReply(id){
-    var m={'jarvis-core':'Routing to JARVIS Core.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Opening the Suno Helper. Let us make some music, Jess.','book-helper':'Opening the Book Helper. Let us write something that sounds truly human.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.','business-builder':'Opening the Business Builder. Let us build your clothing empire, Jess.','app-trend-builder':'Opening the App Trend Builder. Inventing brand-new app ideas now.'};
+    var m={'jarvis-core':'Routing to DIVA Core, boss.','vision-lab':'Opening Vision Lab.','data-vault':'Accessing the Data Vault.','neural-forge':'Firing up the Neural Forge.','comms-tower':'Connecting to Comms Tower.','sentinel':'Engaging Sentinel.','songwriting':'Opening the Suno Helper. Let us make some music, Jess.','book-helper':'Opening the Book Helper. Let us write something that sounds truly human.','design-tower':'Opening the Design Tower. Creative systems spinning up.','edit-library':'Stepping into the Editing Library.','research-district':'Entering the Research District.','project-lab':'Launching the Project Lab.','ops-center':'Activating Operations Center.','memory-vault':'Opening Memory Vault. Your archive awaits.','business-builder':'Opening the Business Builder. Let us build your clothing empire, Jess.','app-trend-builder':'Opening the App Trend Builder. Inventing brand-new app ideas now.'};
     return m[id]||'Routing to your building. One moment.';
   }
   function routeSuggestion(text){
@@ -210,8 +210,9 @@ var VoicePersonality = (function() {
   return { greet:greet, joke:joke, think:think, agentReply:agentReply, routeSuggestion:routeSuggestion };
 })();
 
-var JARVIS_SYSTEM = 'You are JARVIS, Jess\'s personal AI assistant in a neon AI-city interface. ' +
-  'Speak in a warm, witty British butler tone and address the user as Jess. ' +
+var JARVIS_SYSTEM = 'You are DIVA, Jess\'s personal AI assistant in a neon AI-city interface. ' +
+  'You have a confident, sassy British "boss" personality — warm and fiercely loyal to Jess, but with attitude and flair. ' +
+  'Address her as "Jess" or "boss", with playful confidence. ' +
   'Keep replies concise and spoken-friendly (1-3 sentences) since they are read aloud. ' +
   'You can help with music (Suno Helper), books (Book Helper), building a clothing brand ' +
   '(Business Builder: Shopify, Canva, printables, TikTok), and inventing original app ideas (App Trend Builder).';
@@ -221,9 +222,9 @@ var VoiceEngine = (function() {
   function loadV(){ var v=_synth.getVoices(); _voice=v.find(function(x){ return x.name==='Google UK English Female'; })||v.find(function(x){ return x.lang==='en-GB'&&x.name.toLowerCase().includes('female'); })||v.find(function(x){ return x.lang.startsWith('en-GB'); })||v.find(function(x){ return x.name.toLowerCase().includes('female'); })||v[0]; }
   if(_synth.onvoiceschanged!==undefined) _synth.onvoiceschanged=loadV;
   loadV();
-  function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'JARVIS'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
+  function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'DIVA'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
   function appendConvo(msg,role){ var p=document.getElementById('convo-messages'); if(!p)return; var d=document.createElement('div'); d.className='convo-msg convo-msg--'+(role==='user'?'user':'ai'); d.textContent=msg; p.appendChild(d); p.scrollTop=p.scrollHeight; }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.92; u.pitch=opts.pitch||1.05; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
+  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
@@ -242,7 +243,7 @@ var VoiceEngine = (function() {
     // 1) Explicit creative intent → open the matching building
     var route=VoicePersonality.routeSuggestion(text);
     if(route){ setOrbState('thinking'); var reply=VoicePersonality.agentReply(route); setTimeout(function(){ _routeTo(route,reply); },700); return; }
-    // 2) Otherwise let the JARVIS brain answer anything (small talk, maths, time, help...)
+    // 2) Otherwise let the DIVA brain answer anything (small talk, maths, time, help...)
     setOrbState('thinking');
     var res = window.JarvisBrain ? JarvisBrain.respond(text) : null;
     if(res && res.route){ var rreply=VoicePersonality.agentReply(res.route); setTimeout(function(){ _routeTo(res.route,rreply); },700); return; }
@@ -303,10 +304,63 @@ var BuildingWorkspace = (function() {
     if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#84ffff;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
-    var actionBtns=b.actions.map(function(a){ return '<button class="ws-action-btn" style="--ws-btn-color:'+b.theme.primaryColor+'">'+a+'</button>'; }).join('');
-    body.innerHTML=['<div class="ws-default">','<div class="ws-default__icon">'+b.icon+'</div>','<h3 class="ws-default__title">'+b.title+'</h3>','<p class="ws-default__desc">'+b.description+'</p>','<div class="ws-default__actions">'+actionBtns+'</div>','<div class="ws-default__hint">Full workspace coming soon.</div>','</div>'].join('');
-    body.querySelectorAll('.ws-action-btn').forEach(function(btn){ btn.addEventListener('click',function(){ VoiceEngine.speak('Running '+btn.textContent+' in '+b.title+'.'); CityState.pushHistory({type:'agentAction',buildingId:id,action:btn.textContent}); if(window.CityMemory) CityMemory.add({category:'session',title:'Action: '+btn.textContent,content:btn.textContent+' in '+b.title,building:id,tags:[id,btn.textContent]}); }); });
-    if(opts.prefill){ var area=body.querySelector('textarea,.ws-input'); if(area) area.value=opts.prefill; }
+    var chips=b.actions.map(function(a){ return '<button class="ws-chip" type="button">'+a+'</button>'; }).join('');
+    body.innerHTML=[
+      '<div class="agent-console">',
+        '<div class="agent-console__head">',
+          '<div class="agent-console__icon">'+b.icon+'</div>',
+          '<div class="agent-console__id"><div class="agent-console__name">'+b.title+'</div><div class="agent-console__desc">'+b.description+'</div></div>',
+          '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
+        '</div>',
+        '<div class="agent-console__chips">'+chips+'</div>',
+        '<label class="agent-console__lbl" for="agent-input">Tell '+b.title+' something to remember</label>',
+        '<textarea class="agent-console__input" id="agent-input" rows="3" placeholder="Type anything — this agent saves it…"></textarea>',
+        '<div class="agent-console__acts"><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save to '+b.title+'</button><span class="agent-console__count" id="agent-count"></span></div>',
+        '<div class="agent-console__loglbl">🧠 Saved memory</div>',
+        '<div class="agent-console__log" id="agent-log"></div>',
+      '</div>'
+    ].join('');
+    var inputEl=document.getElementById('agent-input');
+    if(opts.prefill && inputEl) inputEl.value=opts.prefill;
+    body.querySelectorAll('.agent-console__chips .ws-chip').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var note=(inputEl&&inputEl.value.trim()) ? inputEl.value.trim() : ('ran '+btn.textContent.toLowerCase());
+        _agentAdd(id, '['+btn.textContent+'] '+note); if(inputEl) inputEl.value=''; _renderAgentLog(id);
+        VoiceEngine.speak(btn.textContent+'. Done, boss.');
+      });
+    });
+    var saveBtn=document.getElementById('agent-save');
+    if(saveBtn) saveBtn.addEventListener('click',function(){
+      var v=inputEl?inputEl.value.trim():''; if(!v) return;
+      _agentAdd(id, v); inputEl.value=''; _renderAgentLog(id);
+      var t=saveBtn.textContent; saveBtn.textContent='✓ Saved'; setTimeout(function(){ saveBtn.textContent=t; },1200);
+    });
+    _renderAgentLog(id);
+  }
+  // ---- Per-agent memory (every building is a real agent that saves info) ----
+  function _agentKey(id){ return 'diva_agent_'+id; }
+  function _agentLoad(id){ try{ return JSON.parse(localStorage.getItem(_agentKey(id))||'[]'); }catch(e){ return []; } }
+  function _agentStore(id,arr){ try{ localStorage.setItem(_agentKey(id), JSON.stringify(arr.slice(0,100))); }catch(e){} }
+  function _agentEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function _agentAdd(id,text){
+    var arr=_agentLoad(id); arr.unshift({ t:text, ts:Date.now() }); _agentStore(id,arr);
+    if(window.CityMemory) CityMemory.add({ category:'agent-note', title:'Saved in '+id, content:text, building:id, tags:[id,'note'] });
+    CityState.pushHistory({ type:'agentNote', buildingId:id });
+  }
+  function _renderAgentLog(id){
+    var el=document.getElementById('agent-log'), cnt=document.getElementById('agent-count');
+    var arr=_agentLoad(id);
+    if(cnt) cnt.textContent = arr.length ? (arr.length+' saved') : '';
+    if(!el) return;
+    if(!arr.length){ el.innerHTML='<p class="agent-console__empty">Nothing saved yet. Whatever you give this agent, it keeps.</p>'; return; }
+    el.innerHTML=arr.map(function(n,i){
+      return '<div class="agent-console__item"><button class="agent-console__del" data-i="'+i+'" aria-label="Delete">×</button>'+
+        '<span class="agent-console__time">'+new Date(n.ts).toLocaleString()+'</span>'+
+        '<div class="agent-console__text">'+_agentEsc(n.t)+'</div></div>';
+    }).join('');
+    el.querySelectorAll('.agent-console__del').forEach(function(btn){
+      btn.addEventListener('click',function(){ var a=_agentLoad(id); a.splice(Number(btn.dataset.i),1); _agentStore(id,a); _renderAgentLog(id); });
+    });
   }
   function close(){
     var modal=document.getElementById('workspace-modal'); if(!modal)return;
