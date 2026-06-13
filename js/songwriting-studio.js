@@ -397,14 +397,32 @@ const SongwritingStudio = (() => {
     if (genreEl) genreEl.addEventListener('change', e => { _state.genre = e.target.value; });
     if (moodEl)  moodEl.addEventListener('change',  e => { _state.mood  = e.target.value; });
 
-    // Generator buttons
+    // Generator buttons — real Claude when connected, templates otherwise.
+    const _aiPrompt = (type) => {
+      const g = _state.genre, m = _state.mood;
+      switch (type) {
+        case 'Lyrics': return 'Write original ' + g + ' song lyrics with a ' + m + ' mood. Use [Verse 1], [Chorus], [Verse 2], [Bridge] labels. Make it singable and specific — real images, not filler.';
+        case 'Hook': return 'Write 3 catchy, original ' + g + ' chorus hooks with a ' + m + ' mood. Each 2-4 lines, instantly memorable.';
+        case 'Suno': return 'Write one copy-paste-ready Suno AI prompt for a ' + g + ' track, ' + m + ' mood: one line of genre, BPM, instrumentation, vocal style and production, plus a short [style] tag block.';
+        case 'Music Video': return 'Write a creative music video treatment for a ' + g + ' song, ' + m + ' mood: logline, visual concept, 4-5 key shots, colour palette and a hero moment.';
+        case 'Album': return 'Design an original ' + g + ' album concept, ' + m + ' mood: title, one-line concept, an 8-track tracklist and the narrative arc.';
+        default: return 'Help me write something great in ' + g + ' with a ' + m + ' mood.';
+      }
+    };
     const _gen = (btnId, fn, type) => {
       const btn = document.getElementById(btnId);
       if (!btn) return;
       btn.addEventListener('click', () => {
-        const result = fn();
-        _setOutput(result);
-        _pushHistory(type, result);
+        if (window.AIClient && AIClient.available && AIClient.available()) {
+          _setOutput('✨ DIVA is writing…');
+          AIClient.generate({ system: 'You are an expert songwriter and Suno AI prompt engineer. Write vivid, original, emotionally resonant material. No preamble, no markdown headers.', prompt: _aiPrompt(type), max_tokens: 1400 })
+            .then((t) => { const out = (t || '').trim() || fn(); _setOutput(out); _pushHistory(type, out); })
+            .catch(() => { const r = fn(); _setOutput(r); _pushHistory(type, r); });
+        } else {
+          const result = fn();
+          _setOutput(result);
+          _pushHistory(type, result);
+        }
       });
     };
     _gen('ss-lyric-btn', generateLyric, 'Lyrics');

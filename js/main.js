@@ -482,6 +482,32 @@ var Routes = (function() {
   return { init:init };
 })();
 
+var AISettings = (function() {
+  function _connected(){ return !!(window.AIClient && AIClient.available && AIClient.available()); }
+  function refresh(){
+    var on=_connected();
+    document.body.dataset.ai = on ? 'on' : 'off';
+    var b=document.getElementById('ai-connect-btn'); if(b) b.textContent = on ? '✨ AI ON' : '✨ CONNECT AI';
+    var el=document.getElementById('system-status'); if(el) el.textContent = on ? 'AI LIVE' : 'ONLINE';
+  }
+  function open(){ var m=document.getElementById('ai-modal'); if(!m) return; var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.getKey) i.value=AIClient.getKey(); m.removeAttribute('hidden'); }
+  function close(){ var m=document.getElementById('ai-modal'); if(m) m.setAttribute('hidden',''); }
+  function init(){
+    var btn=document.getElementById('ai-connect-btn'); if(btn) btn.addEventListener('click',open);
+    var bd=document.getElementById('ai-modal-backdrop'); if(bd) bd.addEventListener('click',close);
+    var c=document.getElementById('ai-cancel-btn'); if(c) c.addEventListener('click',close);
+    var s=document.getElementById('ai-save-btn'); if(s) s.addEventListener('click',function(){
+      var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.setKey) AIClient.setKey((i.value||'').trim());
+      refresh(); close();
+      if(_connected() && CityState.get().powered && typeof VoiceEngine!=='undefined') VoiceEngine.speak('AI connected. The agents are live now, boss.');
+    });
+    var cl=document.getElementById('ai-clear-btn'); if(cl) cl.addEventListener('click',function(){ if(window.AIClient&&AIClient.clearKey) AIClient.clearKey(); var i=document.getElementById('ai-key-input'); if(i) i.value=''; refresh(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+    refresh();
+  }
+  return { init:init, refresh:refresh };
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
   ParticleField.init('particle-canvas');
   EnergyTrail.init('trail-canvas');
@@ -494,13 +520,13 @@ document.addEventListener('DOMContentLoaded', function() {
   Router.init();
   Routes.init();
   HUD.init();
+  AISettings.init();
   CityState.subscribe(HUD.upd);
-  // Detect the live Claude proxy (server.js). If present, buildings + brain go generative.
+  // Detect the live Claude proxy (server.js) OR a browser API key. If present, buildings + brain go generative.
   if(window.AIClient){
-    AIClient.checkHealth().then(function(ok){
-      var el=document.getElementById('system-status');
-      if(el) el.textContent = ok ? 'AI LIVE' : 'ONLINE';
-      console.log('[JARVIS] Live Claude API: ' + (ok ? ('ENABLED ('+AIClient.model()+')') : 'offline — using local templates'));
+    AIClient.checkHealth().then(function(){
+      AISettings.refresh();
+      console.log('[JARVIS] AI: ' + (AIClient.available() ? ('ENABLED ('+AIClient.model()+')') : 'offline — connect a key or run the server'));
     });
   }
   console.log('[JARVIS] City v3.2 - Business Builder + App Trend Builder + live AI online.');
