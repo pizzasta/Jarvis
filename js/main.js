@@ -218,7 +218,7 @@ var JARVIS_SYSTEM = 'You are DIVA, Jess\'s personal AI assistant in a neon AI-ci
   '(Business Builder: Shopify, Canva, printables, TikTok), and inventing original app ideas (App Trend Builder).';
 
 var VoiceEngine = (function() {
-  var _synth=window.speechSynthesis, _recog=null, _voice=null, _listening=false;
+  var _synth=window.speechSynthesis, _recog=null, _voice=null, _listening=false, _audio=null;
   function loadV(){
     var v=(_synth.getVoices&&_synth.getVoices())||[];
     function isGB(x){ return /en[-_]?GB/i.test(x.lang||'') || /united kingdom|uk english|british/i.test(((x.name||'')+' '+(x.lang||''))); }
@@ -250,8 +250,43 @@ var VoiceEngine = (function() {
       .replace(/\s{2,}/g, ' ')             // no big gaps
       .trim();
   }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var said=_naturalise(text); var u=new SpeechSynthesisUtterance(said); loadV(); u.lang='en-GB'; if(_voice) u.voice=_voice; u.rate=opts.rate||0.98; u.pitch=opts.pitch||1.04; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
-  function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
+  function _makeUtter(t,o){ o=o||{}; var u=new SpeechSynthesisUtterance(t); loadV(); u.lang='en-GB'; if(_voice) u.voice=_voice; u.rate=o.rate||0.98; u.pitch=o.pitch||1.04; u.volume=o.volume||1; return u; }
+  // Top-level: use ElevenLabs (human voice) via the server proxy when available,
+  // otherwise fall back to the browser's Web Speech voice.
+  function speak(text,opts){
+    opts=opts||{}; appendConvo(text,'ai');
+    if(window.AIClient && AIClient.ttsAvailable && AIClient.ttsAvailable()){ _speakAI(text,opts); }
+    else { _speakWeb(text,opts); }
+  }
+  function _speakAI(text,opts){
+    try{ if(_synth.speaking) _synth.cancel(); }catch(e){}
+    if(_audio){ try{ _audio.pause(); }catch(e){} _audio=null; }
+    setOrbState('speaking');
+    AIClient.tts(text).then(function(url){
+      _audio=new Audio(url); _audio.volume=(opts&&opts.volume)||1;
+      _audio.onended=function(){ setOrbState('idle'); try{ URL.revokeObjectURL(url); }catch(e){} };
+      _audio.onerror=function(){ setOrbState('idle'); _speakWeb(text,opts); };
+      _audio.play().catch(function(){ setOrbState('idle'); _speakWeb(text,opts); });
+    }).catch(function(){ _speakWeb(text,opts); });
+  }
+  function _speakWeb(text,opts){
+    opts=opts||{}; if(_synth.speaking) _synth.cancel();
+    var said=_naturalise(text);
+    // Say "boss bitch" with extra sass: its own slower, higher, drawn-out chunk.
+    var parts=[]; var m=said.match(/^([\s\S]*?)\bboss bitch\b([\s\S]*)$/i);
+    if(m){
+      if(m[1].replace(/[\s,]+$/,'').trim()) parts.push({ t:m[1].replace(/[\s,]+$/,'').trim(), o:opts });
+      parts.push({ t:'boss bitch…', o:{ rate:0.8, pitch:1.28, volume:opts.volume } });
+      if(m[2].replace(/^[\s,]+/,'').trim()) parts.push({ t:m[2].replace(/^[\s,]+/,'').trim(), o:opts });
+    } else { parts.push({ t:said, o:opts }); }
+    parts.forEach(function(p,i){
+      var u=_makeUtter(p.t,p.o);
+      if(i===0) u.onstart=function(){ setOrbState('speaking'); };
+      if(i===parts.length-1){ u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; }
+      _synth.speak(u);
+    });
+  }
+  function stopSpeaking(){ if(_audio){ try{ _audio.pause(); }catch(e){} _audio=null; } if(_synth.speaking){_synth.cancel();} setOrbState('idle'); }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
     if(typeof CityManager!=='undefined' && !CityManager.activeHas(route)) CityManager.switchToBuilding(route);

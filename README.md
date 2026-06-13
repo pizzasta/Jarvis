@@ -62,6 +62,9 @@ zero-dependency proxy with a Claude API key:
 ```bash
 ANTHROPIC_API_KEY=sk-ant-... node server.js
 # then open http://localhost:8000
+
+# Optional: add a human-level DIVA voice with ElevenLabs
+ANTHROPIC_API_KEY=sk-ant-... ELEVENLABS_API_KEY=sk_... node server.js
 ```
 
 The proxy (`server.js`) serves the app **and** forwards prompts to the Claude API
@@ -74,6 +77,11 @@ When it's live:
   brand-specific, ready-to-use copy.
 - **App Trend Builder → ✨ AI Ideas** invents genuinely original app concepts with
   the model (with a "no clones" instruction), not just the combinatorial engine.
+
+- **Human-level voice (ElevenLabs):** set `ELEVENLABS_API_KEY` and DIVA speaks
+  through a real ElevenLabs voice (default **"Alice"**, British female — override
+  with `ELEVENLABS_VOICE_ID`). The audio is streamed via `/api/tts` so the key
+  stays on the server. Without it, DIVA uses the browser's built-in British voice.
 
 Without the server, those buttons explain how to enable live AI and the app keeps
 working on templates. Copy `.env.example` for the variables you can set.

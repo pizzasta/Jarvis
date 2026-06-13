@@ -21,6 +21,10 @@ var path = require('path');
 var PORT = process.env.PORT || 8000;
 var API_KEY = process.env.ANTHROPIC_API_KEY || '';
 var MODEL = process.env.JARVIS_MODEL || 'claude-opus-4-8';
+// ElevenLabs (human-level TTS). Default voice = "Alice" (British female).
+var ELEVEN_KEY = process.env.ELEVENLABS_API_KEY || '';
+var ELEVEN_VOICE = process.env.ELEVENLABS_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2';
+var ELEVEN_MODEL = process.env.ELEVENLABS_MODEL || 'eleven_turbo_v2_5';
 var ROOT = __dirname;
 
 var MIME = {
@@ -87,6 +91,39 @@ function callClaude(opts, cb) {
   req.end();
 }
 
+// ---- ElevenLabs TTS (streams audio straight back to the browser) ----
+function callEleven(text, voiceId, res) {
+  var vid = (voiceId && /^[A-Za-z0-9]{16,}$/.test(voiceId)) ? voiceId : ELEVEN_VOICE;
+  var payload = JSON.stringify({
+    text: String(text || '').slice(0, 800),
+    model_id: ELEVEN_MODEL,
+    voice_settings: { stability: 0.45, similarity_boost: 0.8, style: 0.55, use_speaker_boost: true }
+  });
+  var req = https.request({
+    hostname: 'api.elevenlabs.io',
+    path: '/v1/text-to-speech/' + vid + '?output_format=mp3_44100_128',
+    method: 'POST',
+    headers: {
+      'xi-api-key': ELEVEN_KEY,
+      'Content-Type': 'application/json',
+      'accept': 'audio/mpeg',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }, function(r) {
+    if (r.statusCode >= 400) {
+      var ec = '';
+      r.on('data', function(d) { ec += d; });
+      r.on('end', function() { sendJSON(res, 502, { error: 'TTS error ' + r.statusCode }); });
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' });
+    r.pipe(res);
+  });
+  req.on('error', function(e) { sendJSON(res, 502, { error: e.message }); });
+  req.write(payload);
+  req.end();
+}
+
 // ---- Static file serving ----
 function serveStatic(req, res) {
   var urlPath = decodeURIComponent(req.url.split('?')[0]);
@@ -106,7 +143,17 @@ function serveStatic(req, res) {
 
 var server = http.createServer(function(req, res) {
   if (req.url === '/api/health') {
-    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null });
+    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null });
+  }
+  if (req.url.split('?')[0] === '/api/tts' && req.method === 'POST') {
+    if (!ELEVEN_KEY) return sendJSON(res, 503, { error: 'No ELEVENLABS_API_KEY set on the server.' });
+    var tb = '';
+    req.on('data', function(d) { tb += d; if (tb.length > 1e5) req.destroy(); });
+    req.on('end', function() {
+      var o; try { o = JSON.parse(tb || '{}'); } catch (e) { return sendJSON(res, 400, { error: 'Bad JSON' }); }
+      callEleven(o.text, o.voiceId, res);
+    });
+    return;
   }
   if (req.url === '/api/generate' && req.method === 'POST') {
     if (!API_KEY) return sendJSON(res, 503, { error: 'No ANTHROPIC_API_KEY set on the server.' });
@@ -128,4 +175,5 @@ var server = http.createServer(function(req, res) {
 server.listen(PORT, function() {
   console.log('[JARVIS] Serving on http://localhost:' + PORT);
   console.log('[JARVIS] Claude API: ' + (API_KEY ? ('ENABLED (' + MODEL + ')') : 'DISABLED — set ANTHROPIC_API_KEY to enable live generation'));
+  console.log('[JARVIS] ElevenLabs voice: ' + (ELEVEN_KEY ? ('ENABLED (voice ' + ELEVEN_VOICE + ')') : 'DISABLED — set ELEVENLABS_API_KEY for human-level DIVA voice'));
 });
