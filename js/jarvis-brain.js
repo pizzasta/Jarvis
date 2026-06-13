@@ -89,6 +89,9 @@ var JarvisBrain = (function() {
     { test:/app idea|app trend|new app|build an app|invent an app|startup idea|saas idea/i,
       reply:function(){ return null; }, route:'app-trend-builder' },
 
+    { test:/\b(trade|trading|stocks?|the markets?|investing|options|crypto|bitcoin|day ?trad|swing trad|watchlist|polygon|ticker)\b/i,
+      reply:function(){ return null; }, route:'trade-desk' },
+
     { test:/who am i|my name/i,
       reply:function(){ return 'You are '+USER+' — the one in charge around here.'; } }
   ];

@@ -29,6 +29,7 @@ var AgentRegistry = (function() {
     { id:'memory-vault',      icon:'💾', title:'MEMORY VAULT',        description:'Long-term context & recall',     theme:{primaryColor:'#7c4dff',secondaryColor:'#b388ff'}, actions:['Remember','Forget','Summarise','Export'],    memory:{} },
     { id:'business-builder',  icon:'👑', title:'BUSINESS BUILDER',    description:'Clothing brand empire: Shopify, Canva, TikTok', theme:{primaryColor:'#00e676',secondaryColor:'#69f0ae'}, actions:['Brand','Products','Shopify','TikTok'], memory:{} },
     { id:'app-trend-builder', icon:'📱', title:'APP TREND BUILDER',   description:'Invents brand-new original app ideas', theme:{primaryColor:'#18ffff',secondaryColor:'#84ffff'}, actions:['Generate','Spec','Trends','Names'], memory:{} },
+    { id:'trade-desk',        icon:'📈', title:'TRADE DESK',          description:'Live data, trade ideas, strategy & risk', theme:{primaryColor:'#ffb300',secondaryColor:'#ffe082'}, actions:['Ideas','Watchlist','Strategy','Risk'], memory:{} },
   ];
   function getAll() { return _b; }
   function getById(id) { return _b.find(function(b){ return b.id===id; }) || null; }
@@ -42,7 +43,7 @@ var CityManager = (function() {
     { id:'mind',    name:'MIND CITY',    icon:'🧠', tagline:'Memory, research & reasoning', accent:'#9d4edd', accent2:'#c77dff', buildings:['jarvis-core','memory-vault','research-district','neural-forge'] },
     { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
     { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] },
-    { id:'empire',  name:'EMPIRE CITY',  icon:'👑', tagline:'Brands, business & new apps',   accent:'#00e676', accent2:'#69f0ae', buildings:['business-builder','app-trend-builder','design-tower','project-lab'] }
+    { id:'empire',  name:'EMPIRE CITY',  icon:'👑', tagline:'Brands, business, trading & new apps', accent:'#00e676', accent2:'#69f0ae', buildings:['business-builder','app-trend-builder','trade-desk','design-tower','project-lab'] }
   ];
   var _active = 'creator';
   function all() { return _cities; }
@@ -374,6 +375,7 @@ var BuildingWorkspace = (function() {
     if(id==='book-helper'){ if(body){ body.innerHTML=''; if(typeof BookHelper!=='undefined'){ BookHelper.mount(body,opts); } else { body.innerHTML='<p style="color:#ffd9a0;padding:2rem">Loading Book Helper...</p>'; } } return; }
     if(id==='business-builder'){ if(body){ body.innerHTML=''; if(typeof BusinessBuilder!=='undefined'){ BusinessBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#69f0ae;padding:2rem">Loading Business Builder...</p>'; } } return; }
     if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#84ffff;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
+    if(id==='trade-desk'){ if(body){ body.innerHTML=''; if(typeof TradeDesk!=='undefined'){ TradeDesk.mount(body,opts); } else { body.innerHTML='<p style="color:#ffe082;padding:2rem">Loading Trade Desk...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
     var chips=b.actions.map(function(a){ return '<button class="ws-chip" type="button">'+a+'</button>'; }).join('');
