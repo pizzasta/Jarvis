@@ -47,26 +47,52 @@ var TradeDesk = (function() {
     _renderHistory();
   }
 
+  // ---- Live market data helpers (Polygon via the server proxy) ----
+  function _marketsOn(){ return !!(window.AIClient && AIClient.marketsAvailable && AIClient.marketsAvailable()); }
+  function _liveOn(){ return _marketsOn() && /Stocks|Options/.test(_state.asset); }   // stocks/ETFs/options underlyings
+  function _fmtQuote(q){
+    var pct=(q.changePct==null)?'?':((q.changePct>=0?'+':'')+Number(q.changePct).toFixed(2)+'%');
+    var arrow=(q.changePct==null)?'•':(q.changePct>=0?'▲':'▼');
+    var price=(q.price==null)?'—':('$'+Number(q.price).toFixed(2));
+    return q.symbol+'  '+price+'  '+arrow+' '+pct;
+  }
+  function _liveBlock(qs){ return 'LIVE PRICES (Polygon):\n'+((qs&&qs.length)? qs.map(function(q){ return '  '+_fmtQuote(q); }).join('\n') : '  (no data returned)'); }
+
   // ---- Generators (rules & education, not predictions) ----
   function _genIdeas(){
     var syms=_syms(3); if(!syms.length) syms=_shuffle(TICKERS[_state.asset]).slice(0,3);
-    var lines=syms.map(function(s,i){
-      var setup=_rand(SETUPS), cat=_rand(CATALYSTS);
-      return (i+1)+'. '+s+' — '+setup+' ('+cat+')\n'+
-        '   Plan: wait for confirmation of the '+setup+'. Enter on the trigger, NOT on a guess.\n'+
-        '   Stop: just beyond the level that invalidates the idea (below support / structure low).\n'+
-        '   Target: scale at 1R and 2R; trail the rest. Skip it if R:R is under 2:1.';
-    });
-    var txt='TRADE IDEAS — '+_state.asset+' / '+_state.style+' / '+_state.risk+' risk\n\n'+lines.join('\n\n')+
-      '\n\nProcess > prediction: only take the trade if your entry trigger fires and your risk is defined first.'+DISCLAIMER;
-    _setOutput(txt); _save('Trade ideas', txt);
+    function build(live){
+      var lines=syms.map(function(s,i){
+        var setup=_rand(SETUPS), cat=_rand(CATALYSTS);
+        return (i+1)+'. '+s+' — '+setup+' ('+cat+')\n'+
+          '   Plan: wait for confirmation of the '+setup+'. Enter on the trigger, NOT on a guess.\n'+
+          '   Stop: just beyond the level that invalidates the idea (below support / structure low).\n'+
+          '   Target: scale at 1R and 2R; trail the rest. Skip it if R:R is under 2:1.';
+      });
+      var txt='TRADE IDEAS — '+_state.asset+' / '+_state.style+' / '+_state.risk+' risk\n\n'+(live?live+'\n\n':'')+lines.join('\n\n')+
+        '\n\nProcess > prediction: only take the trade if your entry trigger fires and your risk is defined first.'+DISCLAIMER;
+      _setOutput(txt); _save('Trade ideas', txt);
+    }
+    if(_liveOn()){ _setOutput('Fetching live prices…'); AIClient.quote(syms.join(',')).then(function(qs){ build(_liveBlock(qs)); }).catch(function(){ build(null); }); }
+    else build(null);
   }
   function _genWatchlist(){
     var syms=_syms(6); if(!syms.length) syms=_shuffle(TICKERS[_state.asset]).slice(0,6);
-    var lines=syms.map(function(s){ return '• '+s+' — '+_rand(SETUPS)+' setting up; watching for '+_rand(CATALYSTS)+'.'; });
-    var txt='WATCHLIST — '+_state.asset+'\n\n'+lines.join('\n')+
-      '\n\nRule: a watchlist is a list of conditions, not a buy list. Nothing is a trade until the trigger hits.'+DISCLAIMER;
-    _setOutput(txt); _save('Watchlist', txt);
+    function build(live){
+      var lines=syms.map(function(s){ return '• '+s+' — '+_rand(SETUPS)+' setting up; watching for '+_rand(CATALYSTS)+'.'; });
+      var txt='WATCHLIST — '+_state.asset+'\n\n'+(live?live+'\n\n':'')+lines.join('\n')+
+        '\n\nRule: a watchlist is a list of conditions, not a buy list. Nothing is a trade until the trigger hits.'+DISCLAIMER;
+      _setOutput(txt); _save('Watchlist', txt);
+    }
+    if(_liveOn()){ _setOutput('Fetching live prices…'); AIClient.quote(syms.join(',')).then(function(qs){ build(_liveBlock(qs)); }).catch(function(){ build(null); }); }
+    else build(null);
+  }
+  function _fetchLiveQuotes(){
+    if(!_marketsOn()){ _setOutput('Live market data is offline.\n\nDeploy the server with a Polygon key (POLYGON_API_KEY) and set js/config.js → JARVIS_API_BASE to your backend URL. Live quotes will then appear here.'+DISCLAIMER); return; }
+    var syms=_syms(8); if(!syms.length) syms=_shuffle(TICKERS['Stocks / ETFs']).slice(0,8);
+    _setOutput('Fetching live prices…');
+    AIClient.quote(syms.join(',')).then(function(qs){ var t='LIVE QUOTES (Polygon):\n\n'+((qs&&qs.length)? qs.map(_fmtQuote).join('\n') : '(no data)')+DISCLAIMER; _setOutput(t); _save('Live quotes', t); })
+      .catch(function(e){ _setOutput('Live quote fetch failed: '+e.message+DISCLAIMER); });
   }
   function _genStrategy(){
     var s=_state.style;
@@ -94,6 +120,19 @@ var TradeDesk = (function() {
     _setOutput(txt); _save('Options play', txt);
   }
   function _genRecap(){
+    if(_marketsOn()){
+      _setOutput('Fetching live market data…');
+      var fmtList=function(arr){ return (arr&&arr.length)? arr.map(function(q){ return '  '+_fmtQuote(q); }).join('\n') : '  (n/a)'; };
+      AIClient.recap().then(function(d){
+        var txt='MARKET RECAP — LIVE (Polygon)\n\nINDICES:\n'+fmtList(d.indices)+'\n\nTOP GAINERS:\n'+fmtList(d.gainers)+'\n\nTOP LOSERS:\n'+fmtList(d.losers)+
+          '\n\nUse this as context, not signals. Plan your levels and risk before entering.'+DISCLAIMER;
+        _setOutput(txt); _save('Market recap (live)', txt);
+      }).catch(function(){ _genRecapTemplate(); });
+      return;
+    }
+    _genRecapTemplate();
+  }
+  function _genRecapTemplate(){
     var txt='MARKET RECAP TEMPLATE (fill with the day\'s data)\n\n'+
       'Indices: SPY ___ | QQQ ___ | IWM ___ (trend: up/down/chop)\n'+
       'Breadth: advancers vs decliners ___ ; VIX ___\n'+
@@ -304,8 +343,8 @@ var TradeDesk = (function() {
       '<div class="td-btn-row"><button class="td-btn td-btn--primary" id="td-gen-recap">📰 Market Recap</button><button class="td-btn td-btn--ghost" id="td-gen-earn">📅 Earnings Playbook</button></div>',
       '</div>',
       '<div class="td-tab-pane" data-tab="livedata">',
-      '<p class="td-hint">Wire reliable live market data with Polygon.io (key stays on the server).</p>',
-      '<button class="td-btn td-btn--primary" id="td-gen-data">🛰 Polygon Live Data Setup</button>',
+      '<p class="td-hint">Wire reliable live market data with Polygon.io (key stays on the server). Once deployed, ideas/watchlist/recap auto-fill with real prices.</p>',
+      '<div class="td-btn-row"><button class="td-btn td-btn--primary" id="td-gen-data">🛰 Polygon Live Data Setup</button><button class="td-btn td-btn--ghost" id="td-live-quotes">📡 Fetch Live Quotes</button></div>',
       '</div>',
       '<div class="td-tab-pane" data-tab="journal">',
       '<p class="td-hint">Log every trade. Reviewing your own data is how you actually improve.</p>',
@@ -358,7 +397,7 @@ var TradeDesk = (function() {
     document.querySelectorAll('.td-tab-btn').forEach(function(b){ b.addEventListener('click', function(){ _switchTab(b.dataset.tab); }); });
 
     var map={ 'td-gen-ideas':_genIdeas,'td-gen-watch':_genWatchlist,'td-gen-strat':_genStrategy,'td-gen-opt':_genOptions,
-      'td-calc-btn':_calcRisk,'td-gen-recap':_genRecap,'td-gen-earn':_genEarnings,'td-gen-data':_genLiveData,'td-j-add':_addJournal };
+      'td-calc-btn':_calcRisk,'td-gen-recap':_genRecap,'td-gen-earn':_genEarnings,'td-gen-data':_genLiveData,'td-live-quotes':_fetchLiveQuotes,'td-j-add':_addJournal };
     Object.keys(map).forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('click', map[id]); });
 
     document.querySelectorAll('.td-agent-card').forEach(function(card){
