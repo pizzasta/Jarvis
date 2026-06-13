@@ -176,19 +176,29 @@ body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
   content: '' !important;
   position: absolute !important;
   inset: 6% 12% 3% 12%;
+  --wc: 8px;   /* window column period (varies per tower) */
+  --wf: 9px;   /* window floor period (varies per tower) */
+  --wdim: 0.6; /* how many rooms are dark */
   background-image:
-    /* every ~3rd column dimmed → not every room is lit (looks real) */
-    repeating-linear-gradient(90deg, transparent 0 16px, rgba(18,1,11,0.6) 16px 25px),
+    /* irregular dark rooms (some lights off) — offset per tower */
+    repeating-linear-gradient(90deg, transparent 0 calc(var(--wc)*2), rgba(16,1,10,var(--wdim)) calc(var(--wc)*2) calc(var(--wc)*3)),
+    /* a few scattered dark rooms vertically too */
+    repeating-linear-gradient(0deg, transparent 0 calc(var(--wf)*3), rgba(16,1,10,0.45) calc(var(--wf)*3) calc(var(--wf)*4)),
     /* vertical mullions (dark frames between windows) */
-    repeating-linear-gradient(90deg, rgba(8,1,12,0.96) 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(90deg, rgba(8,1,12,0.96) 0 2px, transparent 2px var(--wc)),
     /* lit window floors in dark pink, with dark inter-floor gaps */
-    repeating-linear-gradient(0deg, rgba(255,45,120,0.96) 0 4px, rgba(22,2,14,0.94) 4px 9px),
-    /* warm room glow inside, brighter at street + crown */
-    linear-gradient(180deg, rgba(255,45,120,0.55) 0%, rgba(214,17,96,0.16) 20%, rgba(214,17,96,0.16) 64%, rgba(255,45,120,0.65) 100%);
+    repeating-linear-gradient(0deg, rgba(255,45,120,0.96) 0 4px, rgba(22,2,14,0.94) 4px var(--wf)),
+    /* night-sky reflection on upper glass (cool, faint) + warm room glow at street & crown */
+    linear-gradient(180deg, rgba(150,180,255,0.10) 0%, rgba(255,45,120,0.5) 8%, rgba(214,17,96,0.14) 22%, rgba(214,17,96,0.14) 64%, rgba(255,45,120,0.66) 100%);
   opacity: 0.3;
   border-radius: inherit;
   transition: opacity var(--t-slow) ease;
 }
+/* each tower gets a distinct window pattern so they don't look cloned */
+.building-card:nth-child(4n+1)::before { --wc: 8px;  --wf: 9px;  --wdim: 0.55; }
+.building-card:nth-child(4n+2)::before { --wc: 7px;  --wf: 8px;  --wdim: 0.65; }
+.building-card:nth-child(4n+3)::before { --wc: 10px; --wf: 11px; --wdim: 0.5;  }
+.building-card:nth-child(4n+4)::before { --wc: 9px;  --wf: 10px; --wdim: 0.6;  }
 body[data-city-state="active"] .building-card::before {
   opacity: 1;
   animation: tower-flicker 5s ease-in-out infinite;

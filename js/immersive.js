@@ -48,7 +48,17 @@ var Sound = (function() {
   }
   function isEnabled(){ return enabled; }
 
-  return { ensure:ensure, blip:blip, hover:hover, whoosh:whoosh, power:power,
+  // Girly sparkle intro jingle when DIVA powers on (generated, no assets).
+  function intro() {
+    if (!enabled) return; ensure(); if (!ctx) return;
+    var seq = [ [523.25,0],[659.25,150],[783.99,300],[1046.50,450],[880.00,600],[1046.50,760],[1318.51,960] ];
+    seq.forEach(function(s){ setTimeout(function(){ tone(s[0], 0.5, 'triangle', 0.5); }, s[1]); });
+    // soft pad underneath + a shimmer tail
+    tone(261.63, 1.7, 'sine', 0.26); tone(392.00, 1.7, 'sine', 0.2);
+    setTimeout(function(){ tone(1567.98, 0.6, 'sine', 0.32, 2093.00); }, 1120);
+  }
+
+  return { ensure:ensure, blip:blip, hover:hover, whoosh:whoosh, power:power, intro:intro,
            listen:listen, speakCue:speakCue, chime:chime, setEnabled:setEnabled, isEnabled:isEnabled };
 })();
 window.Sound = Sound;
@@ -94,7 +104,7 @@ var Immersive = (function() {
   }
 
   function powerOn() {
-    Sound.ensure(); Sound.power(); haptic([0, 40, 30, 60]);
+    Sound.ensure(); Sound.power(); Sound.intro(); haptic([0, 40, 30, 60]);
     flash();
     document.body.classList.add('fx-kick');
     setTimeout(function(){ document.body.classList.remove('fx-kick'); }, 700);
