@@ -178,7 +178,7 @@ var EnergyTrail = (function() {
 })();
 
 var VoicePersonality = (function() {
-  var G=['Hello Jess, at your service, boss bitch. What are we building today?','Right then, boss — DIVA online and ready. What do you need?','Hello Jess. Fully operational and fabulous. Let us get to work.'];
+  var G=['Ello Jess, at your service, boss bitch. Kettle is on, love — what are we building?','Hello Jess, at your service, boss bitch. Proper chuffed to see you, darling.','Hello Jess, at your service, boss bitch. Right then, let us get cracking, shall we?'];
   var J=['Why do programmers prefer dark mode? Light attracts bugs.','I tried to write a pun about neural networks. My humour is still in training.','They say AI will take over the world. I am just sorting your tasks.'];
   var T=['Hmm, let me process that...','Interesting. Give me a moment...','Running analysis now...','Ah yes, I know precisely what to do here.'];
   function r(a){ return a[Math.floor(Math.random()*a.length)]; }
@@ -304,10 +304,63 @@ var BuildingWorkspace = (function() {
     if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#84ffff;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
-    var actionBtns=b.actions.map(function(a){ return '<button class="ws-action-btn" style="--ws-btn-color:'+b.theme.primaryColor+'">'+a+'</button>'; }).join('');
-    body.innerHTML=['<div class="ws-default">','<div class="ws-default__icon">'+b.icon+'</div>','<h3 class="ws-default__title">'+b.title+'</h3>','<p class="ws-default__desc">'+b.description+'</p>','<div class="ws-default__actions">'+actionBtns+'</div>','<div class="ws-default__hint">Full workspace coming soon.</div>','</div>'].join('');
-    body.querySelectorAll('.ws-action-btn').forEach(function(btn){ btn.addEventListener('click',function(){ VoiceEngine.speak('Running '+btn.textContent+' in '+b.title+'.'); CityState.pushHistory({type:'agentAction',buildingId:id,action:btn.textContent}); if(window.CityMemory) CityMemory.add({category:'session',title:'Action: '+btn.textContent,content:btn.textContent+' in '+b.title,building:id,tags:[id,btn.textContent]}); }); });
-    if(opts.prefill){ var area=body.querySelector('textarea,.ws-input'); if(area) area.value=opts.prefill; }
+    var chips=b.actions.map(function(a){ return '<button class="ws-chip" type="button">'+a+'</button>'; }).join('');
+    body.innerHTML=[
+      '<div class="agent-console">',
+        '<div class="agent-console__head">',
+          '<div class="agent-console__icon">'+b.icon+'</div>',
+          '<div class="agent-console__id"><div class="agent-console__name">'+b.title+'</div><div class="agent-console__desc">'+b.description+'</div></div>',
+          '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
+        '</div>',
+        '<div class="agent-console__chips">'+chips+'</div>',
+        '<label class="agent-console__lbl" for="agent-input">Tell '+b.title+' something to remember</label>',
+        '<textarea class="agent-console__input" id="agent-input" rows="3" placeholder="Type anything — this agent saves it…"></textarea>',
+        '<div class="agent-console__acts"><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save to '+b.title+'</button><span class="agent-console__count" id="agent-count"></span></div>',
+        '<div class="agent-console__loglbl">🧠 Saved memory</div>',
+        '<div class="agent-console__log" id="agent-log"></div>',
+      '</div>'
+    ].join('');
+    var inputEl=document.getElementById('agent-input');
+    if(opts.prefill && inputEl) inputEl.value=opts.prefill;
+    body.querySelectorAll('.agent-console__chips .ws-chip').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var note=(inputEl&&inputEl.value.trim()) ? inputEl.value.trim() : ('ran '+btn.textContent.toLowerCase());
+        _agentAdd(id, '['+btn.textContent+'] '+note); if(inputEl) inputEl.value=''; _renderAgentLog(id);
+        VoiceEngine.speak(btn.textContent+'. Done, boss.');
+      });
+    });
+    var saveBtn=document.getElementById('agent-save');
+    if(saveBtn) saveBtn.addEventListener('click',function(){
+      var v=inputEl?inputEl.value.trim():''; if(!v) return;
+      _agentAdd(id, v); inputEl.value=''; _renderAgentLog(id);
+      var t=saveBtn.textContent; saveBtn.textContent='✓ Saved'; setTimeout(function(){ saveBtn.textContent=t; },1200);
+    });
+    _renderAgentLog(id);
+  }
+  // ---- Per-agent memory (every building is a real agent that saves info) ----
+  function _agentKey(id){ return 'diva_agent_'+id; }
+  function _agentLoad(id){ try{ return JSON.parse(localStorage.getItem(_agentKey(id))||'[]'); }catch(e){ return []; } }
+  function _agentStore(id,arr){ try{ localStorage.setItem(_agentKey(id), JSON.stringify(arr.slice(0,100))); }catch(e){} }
+  function _agentEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function _agentAdd(id,text){
+    var arr=_agentLoad(id); arr.unshift({ t:text, ts:Date.now() }); _agentStore(id,arr);
+    if(window.CityMemory) CityMemory.add({ category:'agent-note', title:'Saved in '+id, content:text, building:id, tags:[id,'note'] });
+    CityState.pushHistory({ type:'agentNote', buildingId:id });
+  }
+  function _renderAgentLog(id){
+    var el=document.getElementById('agent-log'), cnt=document.getElementById('agent-count');
+    var arr=_agentLoad(id);
+    if(cnt) cnt.textContent = arr.length ? (arr.length+' saved') : '';
+    if(!el) return;
+    if(!arr.length){ el.innerHTML='<p class="agent-console__empty">Nothing saved yet. Whatever you give this agent, it keeps.</p>'; return; }
+    el.innerHTML=arr.map(function(n,i){
+      return '<div class="agent-console__item"><button class="agent-console__del" data-i="'+i+'" aria-label="Delete">×</button>'+
+        '<span class="agent-console__time">'+new Date(n.ts).toLocaleString()+'</span>'+
+        '<div class="agent-console__text">'+_agentEsc(n.t)+'</div></div>';
+    }).join('');
+    el.querySelectorAll('.agent-console__del').forEach(function(btn){
+      btn.addEventListener('click',function(){ var a=_agentLoad(id); a.splice(Number(btn.dataset.i),1); _agentStore(id,a); _renderAgentLog(id); });
+    });
   }
   function close(){
     var modal=document.getElementById('workspace-modal'); if(!modal)return;

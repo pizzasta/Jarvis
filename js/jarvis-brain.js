@@ -132,9 +132,9 @@ var JarvisBrain = (function() {
 
   function greeting(){
     return _pick([
-      'Hello '+USER+', at your service, boss bitch. What are we building today?',
-      'Hello '+USER+'. DIVA online and at your service, boss. Where shall we start?',
-      'Right then, '+USER+' — all systems live and fabulous. What do you need, boss?'
+      'Ello '+USER+', at your service, boss bitch. Right then — kettle is on, what are we building, love?',
+      'Hello '+USER+', at your service, boss bitch. Proper chuffed to see you, darling. Where to?',
+      'Hello '+USER+', at your service, boss bitch. Let us get cracking, shall we, gov\'nor?'
     ]);
   }
 

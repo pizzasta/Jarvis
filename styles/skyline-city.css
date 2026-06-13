@@ -143,7 +143,7 @@ body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
 /* ── A single agent TOWER ─────────────────────────────────── */
 .building-card {
   width: clamp(74px, 11vw, 124px) !important;
-  height: 300px;
+  height: 400px;
   padding: 0 !important;
   margin: 0 -2px !important;
   border: none !important;
@@ -175,22 +175,27 @@ body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
 .building-card::before {
   content: '' !important;
   position: absolute !important;
-  inset: 7% 13% 3% 13%;
+  inset: 6% 12% 3% 12%;
   background-image:
-    /* vertical mullions (dark gaps between window columns) — drawn on top */
-    repeating-linear-gradient(90deg, rgba(5,2,11,0.92) 0 2px, transparent 2px 8px),
-    /* lit window floors (bright panes) with dark inter-floor gaps */
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--building-color-2,#fff) 88%, transparent) 0 4px, rgba(5,2,11,0.85) 4px 8px),
-    /* street uplight + crown emissive so it isn't a flat even mesh */
-    linear-gradient(180deg, color-mix(in srgb, var(--building-color) 40%, transparent) 0%, transparent 20%, transparent 66%, color-mix(in srgb, var(--building-color) 55%, transparent) 100%);
-  opacity: 0.26;
+    /* every ~3rd column dimmed → not every room is lit (looks real) */
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(18,1,11,0.6) 16px 25px),
+    /* vertical mullions (dark frames between windows) */
+    repeating-linear-gradient(90deg, rgba(8,1,12,0.96) 0 2px, transparent 2px 8px),
+    /* lit window floors in dark pink, with dark inter-floor gaps */
+    repeating-linear-gradient(0deg, rgba(255,45,120,0.96) 0 4px, rgba(22,2,14,0.94) 4px 9px),
+    /* warm room glow inside, brighter at street + crown */
+    linear-gradient(180deg, rgba(255,45,120,0.55) 0%, rgba(214,17,96,0.16) 20%, rgba(214,17,96,0.16) 64%, rgba(255,45,120,0.65) 100%);
+  opacity: 0.3;
   border-radius: inherit;
-  filter: saturate(1.25);
   transition: opacity var(--t-slow) ease;
 }
 body[data-city-state="active"] .building-card::before {
-  opacity: 0.95;
+  opacity: 1;
   animation: tower-flicker 5s ease-in-out infinite;
+}
+/* dark-pink window bloom seeping out when the city is powered */
+body[data-city-state="active"] .building-card {
+  box-shadow: 0 0 22px rgba(255,45,120,0.12) inset;
 }
 .building-card:nth-child(2n)::before { animation-delay: 1.3s; }
 .building-card:nth-child(3n)::before { animation-delay: 2.1s; }
@@ -289,27 +294,31 @@ body[data-city-state="active"] .building-card {
 }
 
 /* height + silhouette variety across the 4 towers per city */
-.building-card:nth-child(4n+1) { height: 296px; clip-path: polygon(50% 0, 100% 10%, 100% 100%, 0 100%, 0 10%); }
-.building-card:nth-child(4n+2) { height: 356px; clip-path: polygon(38% 4%, 62% 0, 100% 9%, 100% 100%, 0 100%, 0 9%); }
-.building-card:nth-child(4n+3) { height: 262px; clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%); }
-.building-card:nth-child(4n+4) { height: 330px; clip-path: polygon(50% 0, 56% 6%, 100% 6%, 100% 100%, 0 100%, 0 14%, 44% 14%, 44% 6%); }
+.building-card:nth-child(4n+1) { height: 400px; clip-path: polygon(50% 0, 100% 10%, 100% 100%, 0 100%, 0 10%); }
+.building-card:nth-child(4n+2) { height: 500px; clip-path: polygon(38% 4%, 62% 0, 100% 9%, 100% 100%, 0 100%, 0 9%); }
+.building-card:nth-child(4n+3) { height: 360px; clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%); }
+.building-card:nth-child(4n+4) { height: 460px; clip-path: polygon(50% 0, 56% 6%, 100% 6%, 100% 100%, 0 100%, 0 14%, 44% 14%, 44% 6%); }
 
-/* keep the orb visually above the skyline */
-.orb-wrapper { top: 42% !important; }
+/* lift the orb above the taller skyline */
+.orb-wrapper { top: 33% !important; }
 
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .building-card { height: 230px; }
-  .building-card:nth-child(4n+1) { height: 226px; }
-  .building-card:nth-child(4n+2) { height: 270px; }
-  .building-card:nth-child(4n+3) { height: 200px; }
-  .building-card:nth-child(4n+4) { height: 250px; }
+  .building-card { height: 300px; }
+  .building-card:nth-child(4n+1) { height: 300px; }
+  .building-card:nth-child(4n+2) { height: 360px; }
+  .building-card:nth-child(4n+3) { height: 260px; }
+  .building-card:nth-child(4n+4) { height: 330px; }
   .city-highways { height: 24vh; }
-  .orb-wrapper { top: 40% !important; }
+  .orb-wrapper { top: 32% !important; }
 }
 @media (max-width: 480px) {
   .building-card__title { font-size: 0.42rem !important; }
-  .building-card { height: 190px; }
+  .building-card,
+  .building-card:nth-child(4n+1) { height: 240px; }
+  .building-card:nth-child(4n+2) { height: 290px; }
+  .building-card:nth-child(4n+3) { height: 210px; }
+  .building-card:nth-child(4n+4) { height: 268px; }
 }
 
 /* ── Volumetric clouds & atmosphere ───────────────────────── */
@@ -381,3 +390,30 @@ body[data-city-state="active"] .fog { opacity: 0.7; }
 @media (max-width: 768px){
   .city-fog { height: 50vh; }
 }
+
+/* ── Agent console (every building is a real agent that saves info) ── */
+.agent-console{--c:var(--ws-color,#ff2d78);--c2:var(--ws-color-2,#ff6bac);display:flex;flex-direction:column;gap:.9rem;font-family:'Rajdhani',sans-serif;color:#f3e9f5;}
+.agent-console__head{display:flex;align-items:center;gap:.85rem;}
+.agent-console__icon{font-size:2rem;filter:drop-shadow(0 0 12px var(--c));}
+.agent-console__id{flex:1;min-width:0;}
+.agent-console__name{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.1em;font-size:clamp(.95rem,2.4vw,1.3rem);background:linear-gradient(135deg,var(--c),var(--c2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.agent-console__desc{font-size:.8rem;color:#b58fb0;margin-top:.15rem;}
+.agent-console__status{display:flex;align-items:center;gap:.4rem;font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.18em;color:var(--c2);border:1px solid color-mix(in srgb,var(--c) 40%,transparent);border-radius:20px;padding:.28rem .6rem;white-space:nowrap;}
+.agent-console__dot{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:ac-pulse 1.8s ease-in-out infinite;}
+@keyframes ac-pulse{50%{opacity:.4;}}
+.agent-console__chips{display:flex;gap:.45rem;flex-wrap:wrap;}
+.ws-chip{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.07em;text-transform:uppercase;padding:.42rem .8rem;border-radius:7px;cursor:pointer;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 12%,rgba(8,2,14,.6));color:var(--c2);transition:all .18s;}
+.ws-chip:hover{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent);transform:translateY(-1px);}
+.ws-chip--primary{background:linear-gradient(135deg,var(--c),var(--c2));color:#0a0410;font-weight:800;border:none;}
+.agent-console__lbl,.agent-console__loglbl{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#b58fb0;}
+.agent-console__input{background:rgba(255,45,120,.06);border:1px solid color-mix(in srgb,var(--c) 30%,transparent);border-radius:10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:.92rem;padding:.7rem .85rem;outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s;}
+.agent-console__input:focus{border-color:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent);}
+.agent-console__acts{display:flex;align-items:center;gap:.7rem;}
+.agent-console__count{font-size:.7rem;color:#b58fb0;}
+.agent-console__log{display:flex;flex-direction:column;gap:.5rem;max-height:300px;overflow-y:auto;}
+.agent-console__empty{font-size:.8rem;color:#9a7596;font-style:italic;padding:.4rem 0;}
+.agent-console__item{position:relative;background:rgba(255,45,120,.05);border:1px solid color-mix(in srgb,var(--c) 22%,transparent);border-left:3px solid var(--c);border-radius:8px;padding:.55rem .7rem .55rem .8rem;}
+.agent-console__time{font-size:.58rem;letter-spacing:.05em;color:#9a7596;}
+.agent-console__text{font-size:.9rem;color:#f3e9f5;line-height:1.5;margin-top:.2rem;white-space:pre-wrap;word-break:break-word;padding-right:1.2rem;}
+.agent-console__del{position:absolute;top:.4rem;right:.45rem;width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:#9a7596;font-size:1rem;line-height:1;cursor:pointer;transition:color .15s;}
+.agent-console__del:hover{color:var(--c);}
