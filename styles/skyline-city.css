@@ -127,6 +127,18 @@ body[data-city-state="active"] .hw-lane { opacity: 0.8; }
   opacity: 0.5;
 }
 body[data-city-state="active"] .city-grid::after { opacity: 0.95; }
+/* wet-ground reflective glow under the towers */
+.city-grid::before {
+  content: '';
+  position: absolute;
+  left: 4%; right: 4%; bottom: -30px;
+  height: 30px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--clr-pink-core) 26%, transparent), transparent);
+  filter: blur(12px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
 
 /* ── A single agent TOWER ─────────────────────────────────── */
 .building-card {
@@ -137,14 +149,17 @@ body[data-city-state="active"] .city-grid::after { opacity: 0.95; }
   border: none !important;
   border-radius: 4px 4px 0 0 !important;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 22%),
-    linear-gradient(180deg, #1b0a2c 0%, #12061f 70%, #0c0416 100%) !important;
+    linear-gradient(90deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 13%, transparent 48%, rgba(0,0,0,0.34) 84%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.07), transparent 22%),
+    linear-gradient(180deg, #22112f 0%, #15081f 70%, #0c0416 100%) !important;
   backdrop-filter: none !important;
   overflow: visible;
   align-items: center;
   justify-content: flex-end;
   clip-path: polygon(50% 0, 100% 12%, 100% 100%, 0 100%, 0 12%); /* default crown */
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--building-color) 40%, transparent));
+  filter:
+    drop-shadow(0 0 9px color-mix(in srgb, var(--building-color) 55%, transparent))
+    drop-shadow(0 2px 28px color-mix(in srgb, var(--building-color) 28%, transparent));
   transition: filter var(--t-normal) ease, transform var(--t-normal) cubic-bezier(0.34,1.56,0.64,1);
   transform: translateY(0) !important;
 }
@@ -239,14 +254,22 @@ body[data-city-state="active"] .building-card__glow { opacity: 0.9 !important; }
 .building-card:hover,
 .building-card:focus-visible {
   transform: translateY(-10px) !important;
-  filter: drop-shadow(0 0 22px var(--building-color)) brightness(1.12);
+  filter:
+    drop-shadow(0 0 24px var(--building-color))
+    drop-shadow(0 0 64px color-mix(in srgb, var(--building-color) 55%, transparent))
+    brightness(1.14);
   z-index: 6;
 }
 .building-card.is-active {
-  filter: drop-shadow(0 0 26px var(--building-color)) brightness(1.18);
+  filter:
+    drop-shadow(0 0 28px var(--building-color))
+    drop-shadow(0 0 72px color-mix(in srgb, var(--building-color) 60%, transparent))
+    brightness(1.2);
 }
 body[data-city-state="active"] .building-card {
-  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--building-color) 60%, transparent));
+  filter:
+    drop-shadow(0 0 14px var(--building-color))
+    drop-shadow(0 0 44px color-mix(in srgb, var(--building-color) 45%, transparent));
 }
 
 /* height + silhouette variety across the 4 towers per city */
@@ -271,4 +294,74 @@ body[data-city-state="active"] .building-card {
 @media (max-width: 480px) {
   .building-card__title { font-size: 0.42rem !important; }
   .building-card { height: 190px; }
+}
+
+/* ── Volumetric clouds & atmosphere ───────────────────────── */
+/* low clouds rolling through the skyline (parallax depth) */
+.city-fog {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 62vh;
+  z-index: var(--z-skyline);
+  pointer-events: none;
+  overflow: hidden;
+}
+.fog {
+  position: absolute;
+  left: -30%; right: -30%;
+  border-radius: 50%;
+  will-change: transform;
+}
+.fog--far {
+  bottom: 34%; height: 34%;
+  background:
+    radial-gradient(ellipse 60% 100% at 28% 55%, rgba(255,120,200,0.13), transparent 70%),
+    radial-gradient(ellipse 55% 100% at 72% 45%, rgba(170,90,255,0.11), transparent 72%);
+  filter: blur(34px);
+  opacity: 0.55;
+  animation: fog-drift-far 54s ease-in-out infinite;
+}
+.fog--mid {
+  bottom: 16%; height: 32%;
+  background: radial-gradient(ellipse 70% 100% at 50% 60%, rgba(255,90,170,0.17), transparent 72%);
+  filter: blur(28px);
+  opacity: 0.6;
+  animation: fog-drift-mid 40s ease-in-out infinite;
+}
+.fog--near {
+  bottom: -2%; height: 30%;
+  background:
+    linear-gradient(0deg, rgba(18,4,28,0.7), transparent 80%),
+    radial-gradient(ellipse 85% 100% at 42% 80%, rgba(255,140,210,0.18), transparent 70%);
+  filter: blur(20px);
+  opacity: 0.62;
+  animation: fog-drift-near 30s ease-in-out infinite;
+}
+@keyframes fog-drift-far  { 0%,100%{ transform: translateX(-7%); } 50%{ transform: translateX(7%); } }
+@keyframes fog-drift-mid  { 0%,100%{ transform: translateX(8%);  } 50%{ transform: translateX(-8%); } }
+@keyframes fog-drift-near { 0%,100%{ transform: translateX(-5%); } 50%{ transform: translateX(6%); } }
+body[data-city-state="active"] .fog { opacity: 0.7; }
+
+/* high wispy cloud band drifting across the sky */
+.sky-wisp {
+  position: fixed;
+  top: 8%; left: -40%;
+  width: 180%; height: 22%;
+  z-index: var(--z-bg);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 30% 60% at 20% 50%, rgba(255,180,230,0.10), transparent 70%),
+    radial-gradient(ellipse 26% 55% at 55% 45%, rgba(200,170,255,0.09), transparent 72%),
+    radial-gradient(ellipse 22% 50% at 82% 55%, rgba(255,200,160,0.07), transparent 72%);
+  filter: blur(22px);
+  opacity: 0.8;
+  animation: wisp-drift 90s linear infinite;
+}
+@keyframes wisp-drift { from{ transform: translateX(0); } to{ transform: translateX(22%); } }
+
+@media (prefers-reduced-motion: reduce){
+  .fog, .sky-wisp { animation: none; }
+}
+@media (max-width: 768px){
+  .city-fog { height: 50vh; }
 }
