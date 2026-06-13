@@ -383,7 +383,7 @@ var BuildingWorkspace = (function() {
     if(id==='automation-studio'){ if(body){ body.innerHTML=''; if(typeof AutomationStudio!=='undefined'){ AutomationStudio.mount(body,opts); } else { body.innerHTML='<p style="color:#c4bcff;padding:2rem">Loading Automation Studio...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
-    var chips=b.actions.map(function(a){ return '<button class="ws-chip" type="button">'+a+'</button>'; }).join('');
+    var chips=b.actions.map(function(a){ return '<button class="agent-console__do" type="button" data-action="'+a.replace(/"/g,'')+'">'+a+'</button>'; }).join('');
     body.innerHTML=[
       '<div class="agent-console">',
         '<div class="agent-console__head">',
@@ -391,30 +391,60 @@ var BuildingWorkspace = (function() {
           '<div class="agent-console__id"><div class="agent-console__name">'+b.title+'</div><div class="agent-console__desc">'+b.description+'</div></div>',
           '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
         '</div>',
-        '<div class="agent-console__chips">'+chips+'</div>',
-        '<label class="agent-console__lbl" for="agent-input">Tell '+b.title+' something to remember</label>',
-        '<textarea class="agent-console__input" id="agent-input" rows="3" placeholder="Type anything — this agent saves it…"></textarea>',
-        '<div class="agent-console__acts"><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save to '+b.title+'</button><span class="agent-console__count" id="agent-count"></span></div>',
+        '<label class="agent-console__lbl" for="agent-input">Give '+b.title+' something to work on</label>',
+        '<textarea class="agent-console__input" id="agent-input" rows="3" placeholder="Paste text, a topic, or a question — then tap an action, or Ask."></textarea>',
+        '<div class="agent-console__chips">'+chips+'<button class="agent-console__do agent-console__do--ask" id="agent-ask" type="button">⚡ Ask '+b.title+'</button></div>',
+        '<div class="agent-console__outlbl">Result <span class="agent-console__count" id="agent-status"></span></div>',
+        '<div class="agent-console__out" id="agent-out">Pick an action and '+b.title+' will actually do it. Connect AI (top bar) for full intelligence.</div>',
+        '<div class="agent-console__outacts"><button class="ws-chip" id="agent-copy" type="button">Copy</button><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save result</button></div>',
         '<div class="agent-console__loglbl">🧠 Saved memory</div>',
         '<div class="agent-console__log" id="agent-log"></div>',
       '</div>'
     ].join('');
     var inputEl=document.getElementById('agent-input');
     if(opts.prefill && inputEl) inputEl.value=opts.prefill;
-    body.querySelectorAll('.agent-console__chips .ws-chip').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var note=(inputEl&&inputEl.value.trim()) ? inputEl.value.trim() : ('ran '+btn.textContent.toLowerCase());
-        _agentAdd(id, '['+btn.textContent+'] '+note); if(inputEl) inputEl.value=''; _renderAgentLog(id);
-        VoiceEngine.speak(btn.textContent+'. Done, boss.');
-      });
+    body.querySelectorAll('.agent-console__do').forEach(function(btn){
+      btn.addEventListener('click',function(){ _agentRun(id, btn.dataset.action || 'Respond'); });
     });
     var saveBtn=document.getElementById('agent-save');
     if(saveBtn) saveBtn.addEventListener('click',function(){
-      var v=inputEl?inputEl.value.trim():''; if(!v) return;
-      _agentAdd(id, v); inputEl.value=''; _renderAgentLog(id);
+      var out=document.getElementById('agent-out'); var v=out?out.textContent.trim():''; if(!v) return;
+      _agentAdd(id, v); _renderAgentLog(id);
       var t=saveBtn.textContent; saveBtn.textContent='✓ Saved'; setTimeout(function(){ saveBtn.textContent=t; },1200);
     });
+    var copyBtn=document.getElementById('agent-copy');
+    if(copyBtn) copyBtn.addEventListener('click',function(){ var out=document.getElementById('agent-out'); if(out&&out.textContent.trim()){ navigator.clipboard.writeText(out.textContent); copyBtn.textContent='Copied!'; setTimeout(function(){ copyBtn.textContent='Copy'; },1200); } });
     _renderAgentLog(id);
+  }
+  // ---- Make a generic agent actually DO its action (real AI when connected) ----
+  function _agentPrompt(b, action, input){
+    var sys='You are the '+b.title+' agent inside DIVA, a neon AI city. Your role: '+b.description+'. Carry out the user\'s requested action precisely and usefully — actually do the task, do not just describe it. Be concrete and practical. Plain text, no markdown headers.';
+    var prompt=(action?('Action: '+action+'.\n\n'):'')+(input?('Work on this:\n'+input):'No specific input was given — demonstrate this capability with a short, genuinely useful result or a ready-to-use framework.');
+    return { system:sys, prompt:prompt };
+  }
+  function _agentTemplate(b, action, input){
+    var a=(action||'Respond');
+    return b.title+' — '+a+'\n\n'+
+      (input?('On: "'+input.slice(0,180)+(input.length>180?'…':'')+'"\n\n'):'')+
+      'Quick result:\n'+
+      '1. Goal — state what "'+a.toLowerCase()+'" should achieve here in one line.\n'+
+      '2. Do it — three concrete steps to '+a.toLowerCase()+' this now.\n'+
+      '3. Check — how you\'ll know it worked, and the next move.\n\n'+
+      '✨ Connect AI (top bar) and '+b.title+' will fully '+a.toLowerCase()+' this for you — real output, not a checklist.';
+  }
+  function _agentRun(id, action){
+    var b=AgentRegistry.getById(id); if(!b) return;
+    var inp=document.getElementById('agent-input'); var input=(inp&&inp.value.trim())||'';
+    var out=document.getElementById('agent-out'); var st=document.getElementById('agent-status');
+    if(window.AIClient && AIClient.available && AIClient.available()){
+      if(out) out.textContent='✨ '+b.title+' is working…'; if(st) st.textContent='';
+      var p=_agentPrompt(b, action, input);
+      AIClient.generate({ system:p.system, prompt:p.prompt, max_tokens:1300 })
+        .then(function(t){ var r=(t||'').trim()||_agentTemplate(b,action,input); if(out) out.textContent=r; if(st) st.textContent='done'; })
+        .catch(function(e){ if(out) out.textContent=_agentTemplate(b,action,input)+'\n\n('+(e&&e.message||'AI error')+')'; });
+    } else {
+      if(out) out.textContent=_agentTemplate(b, action, input);
+    }
   }
   // ---- Per-agent memory (every building is a real agent that saves info) ----
   function _agentKey(id){ return 'diva_agent_'+id; }
