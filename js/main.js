@@ -396,7 +396,7 @@ var BuildingWorkspace = (function() {
         '<div class="agent-console__chips">'+chips+'<button class="agent-console__do agent-console__do--ask" id="agent-ask" type="button">⚡ Ask '+b.title+'</button></div>',
         '<div class="agent-console__outlbl">Result <span class="agent-console__count" id="agent-status"></span></div>',
         '<div class="agent-console__out" id="agent-out">Pick an action and '+b.title+' will actually do it. Connect AI (top bar) for full intelligence.</div>',
-        '<div class="agent-console__outacts"><button class="ws-chip" id="agent-copy" type="button">Copy</button><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save result</button></div>',
+        '<div class="agent-console__outacts"><button class="ws-chip" id="agent-copy" type="button">Copy</button><button class="ws-chip ws-chip--primary" id="agent-save" type="button">💾 Save result</button><button class="ws-chip" id="agent-run-auto" type="button">⚡ Run automation</button></div>',
         '<div class="agent-console__loglbl">🧠 Saved memory</div>',
         '<div class="agent-console__log" id="agent-log"></div>',
       '</div>'
@@ -414,6 +414,18 @@ var BuildingWorkspace = (function() {
     });
     var copyBtn=document.getElementById('agent-copy');
     if(copyBtn) copyBtn.addEventListener('click',function(){ var out=document.getElementById('agent-out'); if(out&&out.textContent.trim()){ navigator.clipboard.writeText(out.textContent); copyBtn.textContent='Copied!'; setTimeout(function(){ copyBtn.textContent='Copy'; },1200); } });
+    var runAuto=document.getElementById('agent-run-auto');
+    if(runAuto) runAuto.addEventListener('click',function(){
+      var out=document.getElementById('agent-out'), st=document.getElementById('agent-status'), inp=document.getElementById('agent-input');
+      if(!(window.AIClient && AIClient.hookAvailable && AIClient.hookAvailable())){
+        if(out) out.textContent='To run a REAL action, add a free automation webhook in ✨ Connect AI (Zapier Catch Hook / Make / n8n). DIVA will POST this result there and your automation sends the email, posts, or whatever you set up.';
+        if(st) st.textContent='no webhook'; return;
+      }
+      if(st) st.textContent='sending…';
+      AIClient.trigger({ source:'DIVA', agentId:id, agent:b.title, input:(inp&&inp.value)||'', result:(out&&out.textContent)||'', ts:Date.now() })
+        .then(function(){ if(st) st.textContent='✓ sent to automation'; VoiceEngine.speak('Sent to your automation, boss.'); })
+        .catch(function(e){ if(st) st.textContent='failed: '+((e&&e.message)||''); });
+    });
     _renderAgentLog(id);
   }
   // ---- Make a generic agent actually DO its action (real AI when connected) ----
@@ -525,7 +537,7 @@ var AISettings = (function() {
     var b=document.getElementById('ai-connect-btn'); if(b) b.textContent = on ? '✨ AI ON' : '✨ CONNECT AI';
     var el=document.getElementById('system-status'); if(el) el.textContent = on ? 'AI LIVE' : 'ONLINE';
   }
-  function open(){ var m=document.getElementById('ai-modal'); if(!m) return; var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.getKey) i.value=AIClient.getKey(); var p=document.getElementById('ai-poly-input'); if(p&&window.AIClient&&AIClient.getPolyKey) p.value=AIClient.getPolyKey(); m.removeAttribute('hidden'); }
+  function open(){ var m=document.getElementById('ai-modal'); if(!m) return; var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.getKey) i.value=AIClient.getKey(); var p=document.getElementById('ai-poly-input'); if(p&&window.AIClient&&AIClient.getPolyKey) p.value=AIClient.getPolyKey(); var h=document.getElementById('ai-hook-input'); if(h&&window.AIClient&&AIClient.getHook) h.value=AIClient.getHook(); m.removeAttribute('hidden'); }
   function close(){ var m=document.getElementById('ai-modal'); if(m) m.setAttribute('hidden',''); }
   function init(){
     var btn=document.getElementById('ai-connect-btn'); if(btn) btn.addEventListener('click',open);
@@ -534,10 +546,11 @@ var AISettings = (function() {
     var s=document.getElementById('ai-save-btn'); if(s) s.addEventListener('click',function(){
       var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.setKey) AIClient.setKey((i.value||'').trim());
       var p=document.getElementById('ai-poly-input'); if(p&&window.AIClient&&AIClient.setPolyKey) AIClient.setPolyKey((p.value||'').trim());
+      var h=document.getElementById('ai-hook-input'); if(h&&window.AIClient&&AIClient.setHook) AIClient.setHook((h.value||'').trim());
       refresh(); close();
       if(_connected() && CityState.get().powered && typeof VoiceEngine!=='undefined') VoiceEngine.speak('AI connected. The agents are live now, boss.');
     });
-    var cl=document.getElementById('ai-clear-btn'); if(cl) cl.addEventListener('click',function(){ if(window.AIClient){ if(AIClient.clearKey)AIClient.clearKey(); if(AIClient.clearPolyKey)AIClient.clearPolyKey(); } var i=document.getElementById('ai-key-input'); if(i) i.value=''; var p=document.getElementById('ai-poly-input'); if(p) p.value=''; refresh(); });
+    var cl=document.getElementById('ai-clear-btn'); if(cl) cl.addEventListener('click',function(){ if(window.AIClient){ if(AIClient.clearKey)AIClient.clearKey(); if(AIClient.clearPolyKey)AIClient.clearPolyKey(); if(AIClient.clearHook)AIClient.clearHook(); } var i=document.getElementById('ai-key-input'); if(i) i.value=''; var p=document.getElementById('ai-poly-input'); if(p) p.value=''; var h=document.getElementById('ai-hook-input'); if(h) h.value=''; refresh(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
     refresh();
   }

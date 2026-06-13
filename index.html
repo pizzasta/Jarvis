@@ -193,6 +193,10 @@
     <input type="password" id="ai-poly-input" class="ai-modal__input" placeholder="Polygon API key (optional)" autocomplete="off" spellcheck="false" />
     <p class="ai-modal__how">Get one free at <span class="ai-modal__link">polygon.io</span> → Dashboard → <em>API Keys</em>. (Free tier is delayed data.)</p>
 
+    <p class="ai-modal__desc ai-modal__desc--sub">Optional — <strong>Automation webhook</strong> so agents take <em>real</em> actions (send email, post, add a row…):</p>
+    <input type="text" id="ai-hook-input" class="ai-modal__input" placeholder="https://hooks.zapier.com/... (optional)" autocomplete="off" spellcheck="false" />
+    <p class="ai-modal__how">Free: Zapier <em>Catch Hook</em>, Make <em>Custom webhook</em>, or n8n <em>Webhook</em>. Agents POST their result there and your automation does the rest.</p>
+
     <div class="ai-modal__actions">
       <button class="ai-modal__btn ai-modal__btn--primary" id="ai-save-btn">Connect</button>
       <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-clear-btn">Disconnect</button>
