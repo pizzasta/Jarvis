@@ -219,12 +219,22 @@ var JARVIS_SYSTEM = 'You are DIVA, Jess\'s personal AI assistant in a neon AI-ci
 
 var VoiceEngine = (function() {
   var _synth=window.speechSynthesis, _recog=null, _voice=null, _listening=false;
-  function loadV(){ var v=_synth.getVoices(); _voice=v.find(function(x){ return x.name==='Google UK English Female'; })||v.find(function(x){ return x.lang==='en-GB'&&x.name.toLowerCase().includes('female'); })||v.find(function(x){ return x.lang.startsWith('en-GB'); })||v.find(function(x){ return x.name.toLowerCase().includes('female'); })||v[0]; }
+  function loadV(){
+    var v=(_synth.getVoices&&_synth.getVoices())||[];
+    function isGB(x){ return /en[-_]?GB/i.test(x.lang||'') || /united kingdom|uk english|british/i.test(((x.name||'')+' '+(x.lang||''))); }
+    var gb=v.filter(isGB);
+    // Prefer a British FEMALE voice; otherwise any British voice; otherwise null
+    // (null → we leave utterance.voice unset and let lang='en-GB' force the accent).
+    _voice = gb.find(function(x){ return /female|sonia|libby|hazel|kate|serena|stephanie|amy|emma|google uk english female/i.test(x.name||''); })
+          || gb.find(function(x){ return /google uk english/i.test(x.name||''); })
+          || gb[0]
+          || null;
+  }
   if(_synth.onvoiceschanged!==undefined) _synth.onvoiceschanged=loadV;
   loadV();
   function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'DIVA'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
   function appendConvo(msg,role){ var p=document.getElementById('convo-messages'); if(!p)return; var d=document.createElement('div'); d.className='convo-msg convo-msg--'+(role==='user'?'user':'ai'); d.textContent=msg; p.appendChild(d); p.scrollTop=p.scrollHeight; }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.lang='en-GB'; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
+  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.lang='en-GB'; if(_voice) u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.lang='en-GB'; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
