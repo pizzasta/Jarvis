@@ -185,12 +185,18 @@
     <h2 class="ai-modal__title" id="ai-modal-title">✨ Connect AI</h2>
     <p class="ai-modal__desc">Paste your <strong>Anthropic API key</strong> to make every agent actually work — Suno, Book, Business, App ideas, Trade Desk and the orb will use <strong>Claude (Opus 4.8)</strong> instead of templates.</p>
     <input type="password" id="ai-key-input" class="ai-modal__input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" />
+    <p class="ai-modal__how">How to get one: go to <span class="ai-modal__link">console.anthropic.com</span> → sign in → <em>API Keys</em> → <em>Create Key</em> → copy it here. (Pay‑as‑you‑go; usage bills to your account.)</p>
+
+    <p class="ai-modal__desc ai-modal__desc--sub">Optional — <strong>Polygon.io key</strong> for live market data in the Trade Desk (real prices, recaps, movers):</p>
+    <input type="password" id="ai-poly-input" class="ai-modal__input" placeholder="Polygon API key (optional)" autocomplete="off" spellcheck="false" />
+    <p class="ai-modal__how">Get one free at <span class="ai-modal__link">polygon.io</span> → Dashboard → <em>API Keys</em>. (Free tier is delayed data.)</p>
+
     <div class="ai-modal__actions">
       <button class="ai-modal__btn ai-modal__btn--primary" id="ai-save-btn">Connect</button>
       <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-clear-btn">Disconnect</button>
       <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-cancel-btn">Close</button>
     </div>
-    <p class="ai-modal__note">🔒 Your key is stored only in this browser (localStorage) and sent directly to Anthropic — never to any other server. Get a key at <span class="ai-modal__link">console.anthropic.com</span>.</p>
+    <p class="ai-modal__note">🔒 Keys are stored only in this browser (localStorage) and sent directly to Anthropic / Polygon — never to any other server.</p>
   </div>
 </div>
 

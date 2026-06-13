@@ -490,7 +490,7 @@ var AISettings = (function() {
     var b=document.getElementById('ai-connect-btn'); if(b) b.textContent = on ? '✨ AI ON' : '✨ CONNECT AI';
     var el=document.getElementById('system-status'); if(el) el.textContent = on ? 'AI LIVE' : 'ONLINE';
   }
-  function open(){ var m=document.getElementById('ai-modal'); if(!m) return; var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.getKey) i.value=AIClient.getKey(); m.removeAttribute('hidden'); }
+  function open(){ var m=document.getElementById('ai-modal'); if(!m) return; var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.getKey) i.value=AIClient.getKey(); var p=document.getElementById('ai-poly-input'); if(p&&window.AIClient&&AIClient.getPolyKey) p.value=AIClient.getPolyKey(); m.removeAttribute('hidden'); }
   function close(){ var m=document.getElementById('ai-modal'); if(m) m.setAttribute('hidden',''); }
   function init(){
     var btn=document.getElementById('ai-connect-btn'); if(btn) btn.addEventListener('click',open);
@@ -498,10 +498,11 @@ var AISettings = (function() {
     var c=document.getElementById('ai-cancel-btn'); if(c) c.addEventListener('click',close);
     var s=document.getElementById('ai-save-btn'); if(s) s.addEventListener('click',function(){
       var i=document.getElementById('ai-key-input'); if(i&&window.AIClient&&AIClient.setKey) AIClient.setKey((i.value||'').trim());
+      var p=document.getElementById('ai-poly-input'); if(p&&window.AIClient&&AIClient.setPolyKey) AIClient.setPolyKey((p.value||'').trim());
       refresh(); close();
       if(_connected() && CityState.get().powered && typeof VoiceEngine!=='undefined') VoiceEngine.speak('AI connected. The agents are live now, boss.');
     });
-    var cl=document.getElementById('ai-clear-btn'); if(cl) cl.addEventListener('click',function(){ if(window.AIClient&&AIClient.clearKey) AIClient.clearKey(); var i=document.getElementById('ai-key-input'); if(i) i.value=''; refresh(); });
+    var cl=document.getElementById('ai-clear-btn'); if(cl) cl.addEventListener('click',function(){ if(window.AIClient){ if(AIClient.clearKey)AIClient.clearKey(); if(AIClient.clearPolyKey)AIClient.clearPolyKey(); } var i=document.getElementById('ai-key-input'); if(i) i.value=''; var p=document.getElementById('ai-poly-input'); if(p) p.value=''; refresh(); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
     refresh();
   }
