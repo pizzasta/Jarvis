@@ -21,3 +21,6 @@ body[data-ai="on"] .hud-nav__btn--ai{border-color:#22d3ee;color:#04121a;backgrou
 .ai-modal__btn--ghost:hover{border-color:#22d3ee;color:#9fe9ff;}
 .ai-modal__note{font-size:.74rem;line-height:1.5;color:#6f93ad;margin:0;}
 .ai-modal__link{color:#9fe9ff;}
+.ai-modal__how{font-size:.72rem;line-height:1.45;color:#8fb6c9;margin:.35rem 0 0;}
+.ai-modal__how em{color:#cfe6f2;font-style:normal;font-weight:600;}
+.ai-modal__desc--sub{margin-top:1.1rem;padding-top:.9rem;border-top:1px solid rgba(34,211,238,.18);font-size:.88rem;}

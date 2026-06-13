@@ -44,18 +44,57 @@ var AIClient = (function() {
   function offline()   { return !available(); }
   function model()     { return _model || (getKey() ? 'claude-opus-4-8' : null); }
   function ttsAvailable() { return _tts === true; }
-  function marketsAvailable() { return _markets === true; }
+  function marketsAvailable() { return _markets === true || !!getPolyKey(); }
 
-  // Live market data (independent of the Claude key — needs only POLYGON_API_KEY).
+  // ---- Bring-your-own Polygon key (browser-direct market data) ----
+  var POLY_STORE = 'diva_polygon_key';
+  function getPolyKey() { try { return localStorage.getItem(POLY_STORE) || ''; } catch (e) { return ''; } }
+  function setPolyKey(k) { try { if (k) localStorage.setItem(POLY_STORE, String(k).trim()); else localStorage.removeItem(POLY_STORE); } catch (e) {} }
+  function clearPolyKey() { try { localStorage.removeItem(POLY_STORE); } catch (e) {} }
+  function _mapTk(t) {
+    return { symbol: t.ticker,
+      price: (t.lastTrade && t.lastTrade.p) || (t.day && t.day.c) || (t.prevDay && t.prevDay.c) || null,
+      change: (t.todaysChange != null ? t.todaysChange : null),
+      changePct: (t.todaysChangePerc != null ? t.todaysChangePerc : null) };
+  }
+  function _polyDirect(path) {
+    var sep = path.indexOf('?') === -1 ? '?' : '&';
+    return fetch('https://api.polygon.io' + path + sep + 'apiKey=' + encodeURIComponent(getPolyKey()))
+      .then(function(r) { return r.json().then(function(j) { if (!r.ok) throw new Error((j && (j.error || j.message)) || ('Polygon ' + r.status)); return j; }); });
+  }
+
+  // Live market data — server proxy when present, else browser-direct with the Polygon key.
   function quote(symbols) {
-    if (_markets !== true) return Promise.reject(new Error('markets offline'));
-    return fetch(_base() + '/api/quote?symbols=' + encodeURIComponent(symbols))
-      .then(function(r) { if (!r.ok) throw new Error('quote ' + r.status); return r.json(); })
-      .then(function(j) { return (j && j.quotes) || []; });
+    if (_markets === true) {
+      return fetch(_base() + '/api/quote?symbols=' + encodeURIComponent(symbols))
+        .then(function(r) { if (!r.ok) throw new Error('quote ' + r.status); return r.json(); })
+        .then(function(j) { return (j && j.quotes) || []; });
+    }
+    if (getPolyKey()) {
+      var clean = String(symbols || '').toUpperCase().replace(/[^A-Z0-9.,]/g, '');
+      return _polyDirect('/v2/snapshot/locale/us/markets/stocks/tickers?tickers=' + encodeURIComponent(clean))
+        .then(function(j) { return ((j && j.tickers) || []).map(_mapTk); });
+    }
+    return Promise.reject(new Error('markets offline'));
   }
   function recap() {
-    if (_markets !== true) return Promise.reject(new Error('markets offline'));
-    return fetch(_base() + '/api/recap').then(function(r) { if (!r.ok) throw new Error('recap ' + r.status); return r.json(); });
+    if (_markets === true) {
+      return fetch(_base() + '/api/recap').then(function(r) { if (!r.ok) throw new Error('recap ' + r.status); return r.json(); });
+    }
+    if (getPolyKey()) {
+      return Promise.all([
+        _polyDirect('/v2/snapshot/locale/us/markets/stocks/tickers?tickers=SPY,QQQ,IWM,DIA').catch(function(){ return {}; }),
+        _polyDirect('/v2/snapshot/locale/us/markets/stocks/gainers').catch(function(){ return {}; }),
+        _polyDirect('/v2/snapshot/locale/us/markets/stocks/losers').catch(function(){ return {}; })
+      ]).then(function(rs) {
+        return {
+          indices: ((rs[0] && rs[0].tickers) || []).map(_mapTk),
+          gainers: ((rs[1] && rs[1].tickers) || []).slice(0, 5).map(_mapTk),
+          losers:  ((rs[2] && rs[2].tickers) || []).slice(0, 5).map(_mapTk)
+        };
+      });
+    }
+    return Promise.reject(new Error('markets offline'));
   }
 
   // text -> Promise<objectURL> of spoken audio (rejects when TTS is unavailable).
@@ -125,7 +164,7 @@ var AIClient = (function() {
     return Promise.reject(new Error('AI offline — tap "Connect AI" and paste your Anthropic API key, or run the server.'));
   }
 
-  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey };
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey, getPolyKey: getPolyKey, setPolyKey: setPolyKey, clearPolyKey: clearPolyKey };
 })();
 
 window.AIClient = AIClient;
