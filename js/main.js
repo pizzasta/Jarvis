@@ -31,6 +31,7 @@ var AgentRegistry = (function() {
     { id:'app-trend-builder', icon:'📱', title:'APP TREND BUILDER',   description:'Invents brand-new original app ideas', theme:{primaryColor:'#18ffff',secondaryColor:'#84ffff'}, actions:['Generate','Spec','Trends','Names'], memory:{} },
     { id:'trade-desk',        icon:'📈', title:'TRADE DESK',          description:'Live data, trade ideas, strategy & risk', theme:{primaryColor:'#ffb300',secondaryColor:'#ffe082'}, actions:['Ideas','Watchlist','Strategy','Risk'], memory:{} },
     { id:'income-lab',        icon:'💸', title:'AI INCOME LAB',       description:'Rich, automated AI income ideas — $0 upfront', theme:{primaryColor:'#2bd576',secondaryColor:'#ffd54f'}, actions:['Ideas','Faceless','Products','Plan'], memory:{} },
+    { id:'automation-studio', icon:'🤖', title:'AUTOMATION STUDIO',   description:'AI workflows & agents to run it on autopilot', theme:{primaryColor:'#8a7dff',secondaryColor:'#c4bcff'}, actions:['Workflow','Agent','Leads','SOP'], memory:{} },
   ];
   function getAll() { return _b; }
   function getById(id) { return _b.find(function(b){ return b.id===id; }) || null; }
@@ -45,7 +46,7 @@ var CityManager = (function() {
     { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
     { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] },
     { id:'empire',  name:'EMPIRE CITY',  icon:'👑', tagline:'Brands, business, trading & new apps', accent:'#00e676', accent2:'#69f0ae', buildings:['business-builder','app-trend-builder','trade-desk','design-tower','project-lab'] },
-    { id:'wealth',  name:'WEALTH CITY',  icon:'💸', tagline:'Automated AI income, $0 upfront',     accent:'#2bd576', accent2:'#ffd54f', buildings:['income-lab','business-builder','trade-desk','app-trend-builder'] }
+    { id:'wealth',  name:'WEALTH CITY',  icon:'💸', tagline:'Automated AI income, $0 upfront',     accent:'#2bd576', accent2:'#ffd54f', buildings:['income-lab','automation-studio','business-builder','trade-desk','app-trend-builder'] }
   ];
   var _active = 'creator';
   function all() { return _cities; }
@@ -379,6 +380,7 @@ var BuildingWorkspace = (function() {
     if(id==='app-trend-builder'){ if(body){ body.innerHTML=''; if(typeof AppTrendBuilder!=='undefined'){ AppTrendBuilder.mount(body,opts); } else { body.innerHTML='<p style="color:#84ffff;padding:2rem">Loading App Trend Builder...</p>'; } } return; }
     if(id==='trade-desk'){ if(body){ body.innerHTML=''; if(typeof TradeDesk!=='undefined'){ TradeDesk.mount(body,opts); } else { body.innerHTML='<p style="color:#ffe082;padding:2rem">Loading Trade Desk...</p>'; } } return; }
     if(id==='income-lab'){ if(body){ body.innerHTML=''; if(typeof IncomeLab!=='undefined'){ IncomeLab.mount(body,opts); } else { body.innerHTML='<p style="color:#7bf7ad;padding:2rem">Loading AI Income Lab...</p>'; } } return; }
+    if(id==='automation-studio'){ if(body){ body.innerHTML=''; if(typeof AutomationStudio!=='undefined'){ AutomationStudio.mount(body,opts); } else { body.innerHTML='<p style="color:#c4bcff;padding:2rem">Loading Automation Studio...</p>'; } } return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
     var chips=b.actions.map(function(a){ return '<button class="ws-chip" type="button">'+a+'</button>'; }).join('');

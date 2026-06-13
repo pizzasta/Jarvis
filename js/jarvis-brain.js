@@ -92,8 +92,11 @@ var JarvisBrain = (function() {
     { test:/\b(trade|trading|stocks?|the markets?|investing|options|crypto|bitcoin|day ?trad|swing trad|watchlist|polygon|ticker)\b/i,
       reply:function(){ return null; }, route:'trade-desk' },
 
-    { test:/make money|passive income|side hustle|side-hustle|income idea|earn online|get rich|money online|no upfront|automate income|faceless|digital product|affiliate/i,
+    { test:/make money|passive income|side hustle|side-hustle|income idea|earn online|get rich|money online|no upfront|digital product|affiliate/i,
       reply:function(){ return null; }, route:'income-lab' },
+
+    { test:/automat(e|ion)|workflow|zapier|make\.com|n8n|ai agent|autopilot|automate (my|the)|build a bot|integrat/i,
+      reply:function(){ return null; }, route:'automation-studio' },
 
     { test:/who am i|my name/i,
       reply:function(){ return 'You are '+USER+' — the one in charge around here.'; } }
