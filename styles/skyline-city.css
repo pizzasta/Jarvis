@@ -149,44 +149,56 @@ body[data-city-state="active"] .city-grid::before { opacity: 0.75; }
   border: none !important;
   border-radius: 4px 4px 0 0 !important;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 13%, transparent 48%, rgba(0,0,0,0.34) 84%, rgba(0,0,0,0.55) 100%),
-    linear-gradient(180deg, rgba(255,255,255,0.07), transparent 22%),
-    linear-gradient(180deg, #22112f 0%, #15081f 70%, #0c0416 100%) !important;
+    /* glass sheen highlight, top-left */
+    linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 16%, transparent 40%),
+    /* 3D volume: lit left face → shadowed right face */
+    linear-gradient(90deg, rgba(255,255,255,0.16) 0%, transparent 30%, transparent 62%, rgba(0,0,0,0.42) 88%, rgba(0,0,0,0.62) 100%),
+    /* dark glass body, brighter at the street base */
+    linear-gradient(180deg, #2a1340 0%, #16091f 62%, #0b0415 100%) !important;
   backdrop-filter: none !important;
   overflow: visible;
   align-items: center;
   justify-content: flex-end;
   clip-path: polygon(50% 0, 100% 12%, 100% 100%, 0 100%, 0 12%); /* default crown */
   filter:
-    drop-shadow(0 0 9px color-mix(in srgb, var(--building-color) 55%, transparent))
-    drop-shadow(0 2px 28px color-mix(in srgb, var(--building-color) 28%, transparent));
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))                                              /* right shadow face = depth */
+    drop-shadow(-1px 0 0 color-mix(in srgb, var(--building-color-2,#fff) 22%, transparent)) /* left edge highlight */
+    drop-shadow(0 0 10px color-mix(in srgb, var(--building-color) 55%, transparent))
+    drop-shadow(0 3px 30px color-mix(in srgb, var(--building-color) 28%, transparent));
   transition: filter var(--t-normal) ease, transform var(--t-normal) cubic-bezier(0.34,1.56,0.64,1);
   transform: translateY(0) !important;
 }
 .building-card.is-visible { opacity: 1; }
 
-/* lit window grid */
+/* realistic lit-window grid: bright window panes carved by dark mullions,
+   brighter toward the street base + an emissive crown band */
 .building-card::before {
   content: '' !important;
   position: absolute !important;
-  inset: 8% 14% 0 14%;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 6px, color-mix(in srgb, var(--building-color) 55%, transparent) 6px 9px),
-    repeating-linear-gradient(0deg,  transparent 0 9px, color-mix(in srgb, var(--building-color) 45%, transparent) 9px 13px);
-  opacity: 0.18;
+  inset: 7% 13% 3% 13%;
+  background-image:
+    /* vertical mullions (dark gaps between window columns) — drawn on top */
+    repeating-linear-gradient(90deg, rgba(5,2,11,0.92) 0 2px, transparent 2px 8px),
+    /* lit window floors (bright panes) with dark inter-floor gaps */
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--building-color-2,#fff) 88%, transparent) 0 4px, rgba(5,2,11,0.85) 4px 8px),
+    /* street uplight + crown emissive so it isn't a flat even mesh */
+    linear-gradient(180deg, color-mix(in srgb, var(--building-color) 40%, transparent) 0%, transparent 20%, transparent 66%, color-mix(in srgb, var(--building-color) 55%, transparent) 100%);
+  opacity: 0.26;
   border-radius: inherit;
+  filter: saturate(1.25);
   transition: opacity var(--t-slow) ease;
 }
 body[data-city-state="active"] .building-card::before {
-  opacity: 0.7;
-  animation: tower-flicker 4s ease-in-out infinite;
+  opacity: 0.95;
+  animation: tower-flicker 5s ease-in-out infinite;
 }
 .building-card:nth-child(2n)::before { animation-delay: 1.3s; }
 .building-card:nth-child(3n)::before { animation-delay: 2.1s; }
 @keyframes tower-flicker {
-  0%,100% { opacity: 0.62; }
-  45%     { opacity: 0.85; }
-  60%     { opacity: 0.5; }
+  0%,100% { opacity: 0.9; }
+  35%     { opacity: 1; }
+  55%     { opacity: 0.78; }
+  70%     { opacity: 0.97; }
 }
 @media (prefers-reduced-motion: reduce){ body[data-city-state="active"] .building-card::before { animation: none; } }
 
@@ -250,26 +262,30 @@ body[data-city-state="active"] .building-card::after { opacity: 1; }
 body[data-city-state="active"] .building-card__glow { opacity: 0.9 !important; }
 .building-card__line { display: none !important; }
 
-/* hover / active lift */
+/* hover / active lift (keep the 3D depth edges, add bloom) */
 .building-card:hover,
 .building-card:focus-visible {
-  transform: translateY(-10px) !important;
+  transform: translateY(-12px) !important;
   filter:
-    drop-shadow(0 0 24px var(--building-color))
-    drop-shadow(0 0 64px color-mix(in srgb, var(--building-color) 55%, transparent))
-    brightness(1.14);
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(0 0 26px var(--building-color))
+    drop-shadow(0 0 68px color-mix(in srgb, var(--building-color) 55%, transparent))
+    brightness(1.16);
   z-index: 6;
 }
 .building-card.is-active {
   filter:
-    drop-shadow(0 0 28px var(--building-color))
-    drop-shadow(0 0 72px color-mix(in srgb, var(--building-color) 60%, transparent))
-    brightness(1.2);
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(0 0 30px var(--building-color))
+    drop-shadow(0 0 80px color-mix(in srgb, var(--building-color) 60%, transparent))
+    brightness(1.22);
 }
 body[data-city-state="active"] .building-card {
   filter:
-    drop-shadow(0 0 14px var(--building-color))
-    drop-shadow(0 0 44px color-mix(in srgb, var(--building-color) 45%, transparent));
+    drop-shadow(2px 0 2px rgba(0,0,0,0.55))
+    drop-shadow(-1px 0 0 color-mix(in srgb, var(--building-color-2,#fff) 22%, transparent))
+    drop-shadow(0 0 16px var(--building-color))
+    drop-shadow(0 0 50px color-mix(in srgb, var(--building-color) 45%, transparent));
 }
 
 /* height + silhouette variety across the 4 towers per city */

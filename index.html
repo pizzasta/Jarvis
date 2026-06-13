@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>JARVIS — AI City</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23090012'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23ff2d78' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='11' fill='none' stroke='%23ff6bac' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4.5' fill='%23ff6bac'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -17,10 +18,27 @@
 <link rel="stylesheet" href="styles/book-helper.css" />
 <link rel="stylesheet" href="styles/business-builder.css" />
 <link rel="stylesheet" href="styles/app-trend-builder.css" />
+<link rel="stylesheet" href="styles/immersive.css" />
 <link rel="stylesheet" href="styles/skyline-city.css" />
-<link rel="stylesheet" href="styles/ai.css" />
 </head>
 <body data-city-state="idle" data-orb-state="idle">
+
+<!-- Cinematic boot overlay -->
+<div class="boot" id="boot" role="status" aria-label="JARVIS booting">
+  <button class="boot__skip" type="button">SKIP</button>
+  <div class="boot__ring" aria-hidden="true"></div>
+  <div class="boot__title">JARVIS</div>
+  <pre class="boot__log" aria-live="polite"></pre>
+  <div class="boot__bar"><span></span></div>
+  <div class="boot__hint">TAP THE ORB TO ENGAGE</div>
+</div>
+
+<!-- Atmospheric overlays -->
+<div class="fx-flash" id="fx-flash" aria-hidden="true"></div>
+<div class="fx-grain" aria-hidden="true"></div>
+<div class="fx-scanlines" aria-hidden="true"></div>
+<div class="fx-vignette" aria-hidden="true"></div>
+<button class="fx-toggle" id="fx-toggle" type="button" aria-label="Toggle sound">🔊</button>
 
 <canvas id="particle-canvas" aria-hidden="true"></canvas>
 <div class="bg-layer bg-deep" aria-hidden="true"></div>
@@ -52,7 +70,6 @@
     <button class="hud-nav__btn" data-route="home" aria-current="page">HOME</button>
     <button class="hud-nav__btn" data-route="city">CITY</button>
     <button class="hud-nav__btn" data-route="agents">AGENTS</button>
-    <button class="hud-nav__btn hud-nav__btn--ai" id="ai-connect-btn" title="Connect a real Claude model for genuinely smart output">✨ CONNECT AI</button>
   </nav>
 </header>
 
@@ -150,21 +167,6 @@
   </div>
 </div>
 
-<div class="ai-modal" id="ai-modal" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title" hidden>
-  <div class="ai-modal__backdrop" id="ai-modal-backdrop"></div>
-  <div class="ai-modal__panel">
-    <h2 class="ai-modal__title" id="ai-modal-title">✨ Connect Claude</h2>
-    <p class="ai-modal__desc">Paste your Anthropic API key to give JARVIS a real brain. Every guide — Suno, Book, Business, App ideas, and the orb — will use <strong>Claude (Opus 4.8)</strong> for genuinely smart, original output instead of the offline templates.</p>
-    <input type="password" id="ai-key-input" class="ai-modal__input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" />
-    <div class="ai-modal__actions">
-      <button class="ai-modal__btn ai-modal__btn--primary" id="ai-save-btn">Connect</button>
-      <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-clear-btn">Disconnect</button>
-      <button class="ai-modal__btn ai-modal__btn--ghost" id="ai-cancel-btn">Close</button>
-    </div>
-    <p class="ai-modal__note">🔒 Your key is stored only in this browser (localStorage) and sent directly to Anthropic — never to any other server. Get a key at <span class="ai-modal__link">console.anthropic.com</span>.</p>
-  </div>
-</div>
-
 <footer class="hud-bottom" aria-label="Status bar">
   <div class="hud-bottom__item"><span class="hud-bottom__key">CITY</span><span class="hud-bottom__val" id="city-name">CREATOR CITY</span></div>
   <div class="hud-bottom__item"><span class="hud-bottom__key">AGENTS</span><span class="hud-bottom__val" id="building-count">00</span></div>
@@ -173,14 +175,15 @@
 </footer>
 </div>
 
-<script src="js/ai-client.js"></script>
 <script src="js/jarvis-brain.js"></script>
+<script src="js/ai-client.js"></script>
 <script src="js/memory-vault.js"></script>
 <script src="js/songwriting-studio.js"></script>
 <script src="js/design-tower.js"></script>
 <script src="js/book-helper.js"></script>
 <script src="js/business-builder.js"></script>
 <script src="js/app-trend-builder.js"></script>
+<script src="js/immersive.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

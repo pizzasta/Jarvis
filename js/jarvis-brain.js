@@ -60,7 +60,7 @@ var JarvisBrain = (function() {
       reply:function(){ return 'I was built for you, '+USER+' — your own JARVIS, running right here in your browser.'; } },
 
     { test:/what can you do|help|what do you do|capabilities|features|how do (i|you) work|guide me/i,
-      reply:function(){ return 'Quite a lot, '+USER+'. Try the Suno Helper for lyrics, music video ideas and Suno prompts; the Book Helper to write books that sound genuinely human; the Business Builder for clothing, Shopify, Canva, printables and TikTok ideas; or the App Trend Builder to invent brand-new app ideas on demand. You can also just ask me anything by voice, or switch cities up top to explore. For genuinely smart, original answers, tap Connect AI up top to link a real Claude model.'; } },
+      reply:function(){ return 'Quite a lot, '+USER+'. Try the Suno Helper for lyrics and music video ideas; the Book Helper to write books that sound genuinely human; the Business Builder to launch a clothing brand with Shopify, Canva, printables and TikTok; or the App Trend Builder to invent brand-new original app ideas. Just ask me anything by voice, or switch cities up top — visit Empire City for the business tools.'; } },
 
     { test:/thank|cheers|appreciate|nice one/i,
       reply:function(){ return _pick(['Always a pleasure, '+USER+'.','My pleasure entirely, '+USER+'.','Anytime, '+USER+'.']); } },
@@ -82,6 +82,12 @@ var JarvisBrain = (function() {
 
     { test:/sing|song about|write me a song|lyrics/i,
       reply:function(){ return null; }, route:'songwriting' },
+
+    { test:/clothing brand|clothing line|start a (brand|business)|sell (clothes|shirts|online)|shopify|printable|print on demand|side hustle|passive income/i,
+      reply:function(){ return null; }, route:'business-builder' },
+
+    { test:/app idea|app trend|new app|build an app|invent an app|startup idea|saas idea/i,
+      reply:function(){ return null; }, route:'app-trend-builder' },
 
     { test:/who am i|my name/i,
       reply:function(){ return 'You are '+USER+' — the one in charge around here.'; } }

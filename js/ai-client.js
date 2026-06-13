@@ -1,129 +1,65 @@
 'use strict';
-/* AIClient — real Claude intelligence for JARVIS, straight from the browser.
-
-   Jess connects her own Anthropic API key (stored only in this browser's
-   localStorage). When connected, the buildings and the orb call Claude
-   (claude-opus-4-8) directly and stream the answer. When not connected,
-   every feature falls back to its built-in offline generator, so the app
-   always works. */
+/* AIClient — thin bridge to the server-side Claude proxy (server.js).
+   Falls back cleanly to DEMO / OFFLINE mode when no backend is present
+   (e.g. opened via file://, GitHub Pages, or any plain static host), so the
+   UI keeps working and agents respond with template/placeholder output. */
 
 var AIClient = (function() {
+  var _available = null;   // null = unknown, true once a live backend answers
+  var _model = null;
+  var _checked = false;
 
-  var MODEL = 'claude-opus-4-8';
-  var ENDPOINT = 'https://api.anthropic.com/v1/messages';
-  var KEY_STORE = 'jarvis_anthropic_key';
-
-  function getKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch(e){ return ''; } }
-  function setKey(k) { try { localStorage.setItem(KEY_STORE, (k||'').trim()); } catch(e){} }
-  function clearKey() { try { localStorage.removeItem(KEY_STORE); } catch(e){} }
-  function ready() { return !!getKey(); }
-
-  // Low-level streaming call. Resolves with the full text; calls onText(delta,full) per chunk.
-  function stream(opts) {
-    opts = opts || {};
-    var key = getKey();
-    if(!key) return Promise.reject(new Error('no-key'));
-    var body = {
-      model: MODEL,
-      max_tokens: opts.maxTokens || 2000,
-      messages: [{ role: 'user', content: opts.prompt || '' }],
-      stream: true
-    };
-    if(opts.system) body.system = opts.system;
-
-    return fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify(body),
-      signal: opts.signal
-    }).then(function(res) {
-      if(!res.ok) {
-        return res.text().then(function(t) {
-          var msg = 'API error ' + res.status;
-          try { var j = JSON.parse(t); if(j.error && j.error.message) msg = j.error.message; } catch(e){}
-          throw new Error(msg);
-        });
-      }
-      var reader = res.body.getReader();
-      var decoder = new TextDecoder();
-      var full = '';
-      var buf = '';
-      function pump() {
-        return reader.read().then(function(r) {
-          if(r.done) return full;
-          buf += decoder.decode(r.value, { stream: true });
-          var lines = buf.split('\n');
-          buf = lines.pop();
-          for(var i=0;i<lines.length;i++) {
-            var line = lines[i].trim();
-            if(line.indexOf('data:') !== 0) continue;
-            var data = line.slice(5).trim();
-            if(!data || data === '[DONE]') continue;
-            try {
-              var evt = JSON.parse(data);
-              if(evt.type === 'content_block_delta' && evt.delta && evt.delta.type === 'text_delta') {
-                full += evt.delta.text;
-                if(opts.onText) opts.onText(evt.delta.text, full);
-              } else if(evt.type === 'message_delta' && evt.delta && evt.delta.stop_reason === 'refusal') {
-                throw new Error('Claude declined that request.');
-              }
-            } catch(e) { if(e.message && e.message.indexOf('declined')>=0) throw e; }
-          }
-          return pump();
-        });
-      }
-      return pump();
-    });
+  // A static host (GitHub Pages, file://, *.github.io, codepen, etc.) has no
+  // /api backend — don't even probe it, so there is no 404 in the console.
+  function _isStaticHost() {
+    try {
+      if (location.protocol === 'file:') return true;
+      var h = (location.hostname || '').toLowerCase();
+      if (!h) return true;
+      if (/\.github\.io$/.test(h)) return true;
+      if (/\.(pages\.dev|netlify\.app|vercel\.app|surge\.sh)$/.test(h)) return true;
+    } catch (e) {}
+    return false;
   }
 
-  // High-level: stream Claude's answer into an output element. Falls back to
-  // the offline generator (fallback()) on any error or when no key is set.
-  // Returns a Promise that resolves with the final text.
-  function toOutput(el, opts) {
-    opts = opts || {};
-    var fallback = opts.fallback || function(){ return ''; };
-    var onDone = opts.onDone || function(){};
+  function checkHealth() {
+    _checked = true;
+    if (_isStaticHost()) { _available = false; _model = null; return Promise.resolve(false); }
+    // Guard the fetch so a 404 / network error / non-JSON body never throws.
+    return fetch('/api/health', { method: 'GET' })
+      .then(function(r) { return (r && r.ok) ? r.json().catch(function(){ return null; }) : null; })
+      .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; return _available; })
+      .catch(function() { _available = false; _model = null; return false; });
+  }
 
-    if(!ready()) {
-      var t = fallback();
-      if(el) el.textContent = t;
-      onDone(t, false);
-      return Promise.resolve(t);
+  function available() { return _available === true; }
+  function offline()   { return _available !== true; }   // true in demo mode
+  function model()     { return _model; }
+
+  // opts: { system, prompt, max_tokens } -> Promise<string>
+  // Rejects in offline mode; callers should check available() first and show
+  // their own demo placeholder, but this guard means a stray call won't 404.
+  function generate(opts) {
+    if (offline()) {
+      return Promise.reject(new Error('AI offline — running in demo mode (no backend). Run "node server.js" with an API key to enable live generation.'));
     }
-
-    if(el) { el.textContent = '✨ Claude is thinking…'; el.classList.add('ai-streaming'); }
-    var first = true;
-    return stream({
-      system: opts.system,
-      prompt: opts.prompt,
-      maxTokens: opts.maxTokens,
-      onText: function(delta, full) {
-        if(el) {
-          if(first) { el.textContent = ''; first = false; }
-          el.textContent = full;
-          if(el.scrollTo) el.scrollTop = el.scrollHeight;
-        }
-      }
-    }).then(function(full) {
-      if(el) el.classList.remove('ai-streaming');
-      onDone(full, true);
-      return full;
-    }).catch(function(err) {
-      if(el) el.classList.remove('ai-streaming');
-      var t = fallback();
-      var note = '⚠ ' + (err && err.message ? err.message : 'AI unavailable') + ' — showing offline version.\n\n';
-      if(el) el.textContent = note + t;
-      onDone(t, false);
-      return t;
+    return fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: opts.system,
+        prompt: opts.prompt,
+        max_tokens: opts.max_tokens || 1200
+      })
+    }).then(function(r) {
+      return r.json().catch(function(){ return {}; }).then(function(j) {
+        if (!r.ok) throw new Error(j.error || ('AI error ' + r.status));
+        return j.text;
+      });
     });
   }
 
-  return { MODEL:MODEL, ready:ready, getKey:getKey, setKey:setKey, clearKey:clearKey, stream:stream, toOutput:toOutput };
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate };
 })();
 
 window.AIClient = AIClient;

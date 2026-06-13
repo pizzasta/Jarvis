@@ -17,19 +17,33 @@ python3 -m http.server 8000
 Click the **JARVIS orb** in the centre to power on the city and hear the greeting.
 Use the **mic** (orb or the input bar) to ask anything, or type a message.
 
-The scene is a neon-pink futuristic **cityscape**: a nebula starfield sky, flowing
-light-trail highways, and a skyline where **each glowing tower is an AI agent** —
-click a tower to open that guide. Switch cities to change which agents (towers) appear.
+The scene is a neon-pink futuristic **cityscape**: a nebula starfield sky with drifting
+clouds, flowing light-trail highways, and a skyline of 3D glowing towers with lit windows
+— **each tower is an AI agent**. Click a tower to open that guide; power on to light the
+windows. Switching cities swaps which agents (towers) appear.
 
 ## Cities & buildings
 
 Switch cities from the rail near the top. Each city has its own buildings:
 
 - **🎨 Creator City** — **Suno Helper**, **Book Helper**, Design Tower, Editing Library
-- **🏬 Business City** — **Business Builder**, **App Trend Builder**, Design Tower, Operations Center
 - **🧠 Mind City** — JARVIS Core, Memory Vault, Research District, Neural Forge
 - **👁 Vision City** — Vision Lab, Data Vault, Comms Tower, Sentinel
 - **🚀 Launch City** — Project Lab, Operations Center, Design Tower, Data Vault
+- **👑 Empire City** — **Business Builder**, **App Trend Builder**, Design Tower, Project Lab
+
+### Empire City guides
+
+1. **👑 Business Builder** — build a clothing brand end-to-end: brand name + tagline ideas,
+   a product line with fabrics & mockup briefs, full **Shopify** listings, **Canva** template
+   plans, **printables / print-on-demand** products, a 14-day **TikTok** content calendar
+   with viral hooks, an interactive **profit calculator**, an email-flow generator, and a
+   launch checklist — plus a grid of sub-agents (Brand, Product, Shopify, Canva, Printables,
+   TikTok, Pricing, Email, Launch, Growth).
+2. **📱 App Trend Builder** — invents **brand-new, original** app ideas by combining domains,
+   mechanics, audiences and twists, then passing each through a **clone filter** so it never
+   copies a known app. Expand any idea into a full spec (problem, features, monetization, tech
+   stack, MVP plan, go-to-market), browse a **trend radar**, and generate registrable app names.
 
 ### The two headline guides (Creator City)
 
@@ -39,32 +53,30 @@ Switch cities from the rail near the top. Each city has its own buildings:
    plus a **Humanizer** that rewrites AI-sounding text to read like a real person, with a
    live "human score".
 
-### Business City — two AI agent buildings
+## Live AI (optional) — truly generative output
 
-1. **🏬 Business Builder** — one agent for a whole brand: clothing design briefs &
-   print prompts, Shopify listings + store names, Canva template concepts, **printables /
-   POD** (planners, wall art, journals), TikTok content plans, brand kits, niche finder,
-   pricing & margins, a 7-day launch calendar, email/SMS flows and ad copy. Hit
-   **Build Everything** for a full brand pack tuned to your niche, audience and vibe.
-2. **💡 App Trend Builder** — invents **brand-new app ideas on demand** by fusing two
-   unrelated domains with emerging tech and a retention mechanic, so ideas are original
-   rather than clones. Each card includes the problem, solution, why it's new, core
-   features, monetization, a viral growth hook, MVP scope and a tech stack. Generate one
-   or five at a time, pin the winners, or send to Project Lab.
+By default every building generates from rich local templates (no API key needed —
+just open `index.html`). To make JARVIS *truly generative*, run the included
+zero-dependency proxy with a Claude API key:
 
-## Make it genuinely smart — Connect AI
+```bash
+ANTHROPIC_API_KEY=sk-ant-... node server.js
+# then open http://localhost:8000
+```
 
-By default every guide works **offline** using built-in generators, so the app
-runs with zero setup. For genuinely intelligent, original output, tap
-**✨ Connect AI** in the top bar and paste your own **Anthropic API key**:
+The proxy (`server.js`) serves the app **and** forwards prompts to the Claude API
+(`claude-opus-4-8`) — the key stays on the server and never reaches the browser.
+When it's live:
 
-- The orb's "ask anything" and all four guides (Suno, Book, Business, App ideas)
-  then call **Claude (Opus 4.8)** directly and **stream** the answer live.
-- The **Book Helper's Humanizer** uses Claude to rewrite AI-sounding text so it
-  reads like a real person — the headline "sound human, not AI" feature.
-- Your key is stored **only in your browser** (localStorage) and sent **directly
-  to Anthropic** — never to any other server. Get a key at console.anthropic.com.
-- No key? Everything still works with the offline generators.
+- The HUD shows **AI LIVE**, and the orb/chat "ask anything" answers come straight
+  from Claude (in JARVIS's British voice).
+- **Business Builder → ✨ AI Boost** turns any template draft into sharper,
+  brand-specific, ready-to-use copy.
+- **App Trend Builder → ✨ AI Ideas** invents genuinely original app concepts with
+  the model (with a "no clones" instruction), not just the combinatorial engine.
+
+Without the server, those buttons explain how to enable live AI and the app keeps
+working on templates. Copy `.env.example` for the variables you can set.
 
 ## Voice & "ask anything"
 
@@ -82,4 +94,8 @@ runs with zero setup. For genuinely intelligent, original output, tap
 - `js/songwriting-studio.js` — Suno Helper workspace
 - `js/book-helper.js` — Book Helper workspace + Humanizer
 - `js/design-tower.js`, `js/memory-vault.js` — additional building workspaces
+- `js/business-builder.js` — Business Builder workspace (brand, Shopify, Canva, printables, TikTok, pricing)
+- `js/app-trend-builder.js` — App Trend Builder workspace (original app-idea generator)
+- `server.js` — optional zero-dependency static server + Claude API proxy (`/api/generate`)
+- `js/ai-client.js` — browser bridge to the proxy; falls back to templates when offline
 - `styles/` — themed CSS per area
