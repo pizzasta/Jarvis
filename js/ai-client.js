@@ -120,6 +120,27 @@ var AIClient = (function() {
   function clearKey() { try { localStorage.removeItem(KEY_STORE); } catch (e) {} }
   function _serverOn() { return _available === true; }
 
+  // ---- Real-world actions: fire an automation webhook (Zapier/Make/n8n) ----
+  // Browser-direct: agents POST their result to your webhook, which then does
+  // the real thing (send email, post, add a row...). No server needed.
+  var HOOK_STORE = 'diva_webhook_url';
+  function getHook() { try { return localStorage.getItem(HOOK_STORE) || ''; } catch (e) { return ''; } }
+  function setHook(u) { try { if (u) localStorage.setItem(HOOK_STORE, String(u).trim()); else localStorage.removeItem(HOOK_STORE); } catch (e) {} }
+  function clearHook() { try { localStorage.removeItem(HOOK_STORE); } catch (e) {} }
+  function hookAvailable() { return !!getHook(); }
+  function trigger(payload) {
+    var url = getHook();
+    if (!url) return Promise.reject(new Error('No automation webhook set — add one in Connect AI.'));
+    var body = JSON.stringify(payload || {});
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
+      .then(function(r) { return { ok: true, status: r.status }; })
+      .catch(function() {
+        // Many catch-hooks block CORS reads — fire-and-forget as a fallback.
+        return fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: body })
+          .then(function() { return { ok: true, status: 0, opaque: true }; });
+      });
+  }
+
   function _direct(opts) {
     var key = getKey();
     return fetch('https://api.anthropic.com/v1/messages', {
@@ -164,7 +185,7 @@ var AIClient = (function() {
     return Promise.reject(new Error('AI offline — tap "Connect AI" and paste your Anthropic API key, or run the server.'));
   }
 
-  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey, getPolyKey: getPolyKey, setPolyKey: setPolyKey, clearPolyKey: clearPolyKey };
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey, getPolyKey: getPolyKey, setPolyKey: setPolyKey, clearPolyKey: clearPolyKey, getHook: getHook, setHook: setHook, clearHook: clearHook, hookAvailable: hookAvailable, trigger: trigger };
 })();
 
 window.AIClient = AIClient;

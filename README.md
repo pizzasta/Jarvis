@@ -102,6 +102,15 @@ It's one-click ready:
   rule-based templates and shows how to wire the feed. *Educational only — not
   financial advice.*
 
+## Real-world actions (agents that DO things)
+
+- **Automation webhook (works with no server):** in **✨ Connect AI** paste a free
+  **Zapier Catch Hook / Make / n8n** webhook URL. Every agent's **⚡ Run automation**
+  button POSTs `{agent, action, input, result}` to it — your automation then sends
+  the email, posts, adds a row, etc. The URL lives only in your browser.
+- **Email (hosted):** set `RESEND_API_KEY` (+ `MAIL_FROM`) and `POST /api/send-email`
+  sends real email server-side.
+
 Until `JARVIS_API_BASE` is set, **nothing changes** — DIVA keeps the current browser British voice.
 
 Without the server, those buttons explain how to enable live AI and the app keeps

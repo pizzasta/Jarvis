@@ -27,6 +27,9 @@ var ELEVEN_VOICE = process.env.ELEVENLABS_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2';
 var ELEVEN_MODEL = process.env.ELEVENLABS_MODEL || 'eleven_turbo_v2_5';
 // Polygon.io live market data (key stays server-side).
 var POLYGON_KEY = process.env.POLYGON_API_KEY || '';
+// Resend email (real-world action: agents can send email when hosted).
+var RESEND_KEY = process.env.RESEND_API_KEY || '';
+var MAIL_FROM = process.env.MAIL_FROM || 'DIVA <onboarding@resend.dev>';
 var ROOT = __dirname;
 
 var MIME = {
@@ -175,6 +178,29 @@ function handleRecap(res) {
   polyGet('/v2/snapshot/locale/us/markets/stocks/losers', function(e, j) { if (!e && j && j.tickers) out.losers = j.tickers.slice(0, 5).map(mapTk); done(); });
 }
 
+// ---- Resend email (real action) ----
+function callResend(opts, cb) {
+  var payload = JSON.stringify({
+    from: MAIL_FROM,
+    to: Array.isArray(opts.to) ? opts.to : [String(opts.to || '')],
+    subject: String(opts.subject || '(no subject)'),
+    text: String(opts.text || opts.body || '')
+  });
+  var req = https.request({
+    hostname: 'api.resend.com', path: '/emails', method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Length': Buffer.byteLength(payload) }
+  }, function(r) {
+    var c = '';
+    r.on('data', function(d) { c += d; });
+    r.on('end', function() {
+      try { var j = JSON.parse(c); if (r.statusCode >= 400) return cb(new Error((j.message || j.error) || ('Resend ' + r.statusCode))); cb(null, j); }
+      catch (e) { cb(e); }
+    });
+  });
+  req.on('error', cb);
+  req.write(payload); req.end();
+}
+
 // ---- Static file serving ----
 function serveStatic(req, res) {
   var urlPath = decodeURIComponent(req.url.split('?')[0]);
@@ -204,7 +230,17 @@ var server = http.createServer(function(req, res) {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
   }
   if (req.url === '/api/health') {
-    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null, markets: !!POLYGON_KEY });
+    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null, markets: !!POLYGON_KEY, mail: !!RESEND_KEY });
+  }
+  if (req.url.split('?')[0] === '/api/send-email' && req.method === 'POST') {
+    if (!RESEND_KEY) return sendJSON(res, 503, { error: 'No RESEND_API_KEY set on the server.' });
+    var eb = '';
+    req.on('data', function(d) { eb += d; if (eb.length > 1e5) req.destroy(); });
+    req.on('end', function() {
+      var o; try { o = JSON.parse(eb || '{}'); } catch (e) { return sendJSON(res, 400, { error: 'Bad JSON' }); }
+      callResend(o, function(err, j) { if (err) return sendJSON(res, 502, { error: err.message }); sendJSON(res, 200, { ok: true, id: j && j.id }); });
+    });
+    return;
   }
   if (req.url.split('?')[0] === '/api/quote') {
     if (!POLYGON_KEY) return sendJSON(res, 503, { error: 'No POLYGON_API_KEY set on the server.' });
@@ -246,4 +282,5 @@ server.listen(PORT, function() {
   console.log('[JARVIS] Claude API: ' + (API_KEY ? ('ENABLED (' + MODEL + ')') : 'DISABLED — set ANTHROPIC_API_KEY to enable live generation'));
   console.log('[JARVIS] ElevenLabs voice: ' + (ELEVEN_KEY ? ('ENABLED (voice ' + ELEVEN_VOICE + ')') : 'DISABLED — set ELEVENLABS_API_KEY for human-level DIVA voice'));
   console.log('[JARVIS] Polygon market data: ' + (POLYGON_KEY ? 'ENABLED' : 'DISABLED — set POLYGON_API_KEY for live quotes in Trade Desk'));
+  console.log('[JARVIS] Resend email: ' + (RESEND_KEY ? 'ENABLED' : 'DISABLED — set RESEND_API_KEY for /api/send-email'));
 });
