@@ -224,7 +224,7 @@ var VoiceEngine = (function() {
   loadV();
   function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'DIVA'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
   function appendConvo(msg,role){ var p=document.getElementById('convo-messages'); if(!p)return; var d=document.createElement('div'); d.className='convo-msg convo-msg--'+(role==='user'?'user':'ai'); d.textContent=msg; p.appendChild(d); p.scrollTop=p.scrollHeight; }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
+  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.lang='en-GB'; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
@@ -268,13 +268,24 @@ var VoiceEngine = (function() {
     _recog.onend=function(){ _listening=false; if(CityState.get().orbState==='listening') setOrbState('idle'); };
     _recog.start();
   }
+  // Unlock the speech engine inside a user gesture so the first greeting reliably speaks.
+  var _primed=false;
+  function prime(){
+    try{
+      if(_synth.paused) _synth.resume();
+      loadV();
+      if(_primed) return; _primed=true;
+      var u=new SpeechSynthesisUtterance(' '); u.volume=0; u.lang='en-GB'; u.voice=_voice||null; _synth.speak(u);
+    }catch(e){}
+  }
   function init(){
+    document.addEventListener('pointerdown', prime, { once:false, passive:true });
     var mic=document.getElementById('convo-mic-btn'), send=document.getElementById('convo-send-btn'), inp=document.getElementById('convo-text-input');
     if(mic) mic.addEventListener('click',startListening);
     if(send) send.addEventListener('click',function(){ if(inp){processInput(inp.value);inp.value='';} });
     if(inp) inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput(inp.value);inp.value='';} });
   }
-  return { init:init, speak:speak, stopSpeaking:stopSpeaking, startListening:startListening, stopListening:stopListening, processInput:processInput };
+  return { init:init, speak:speak, prime:prime, stopSpeaking:stopSpeaking, startListening:startListening, stopListening:stopListening, processInput:processInput };
 })();
 
 var BuildingWorkspace = (function() {
@@ -387,9 +398,10 @@ var OrbController = (function() {
   function init(){
     var orb=document.getElementById('master-orb'); if(!orb)return;
     orb.addEventListener('click',function(){
+      if(VoiceEngine.prime) VoiceEngine.prime(); // unlock speech inside the gesture
       var s=CityState.get();
       if(s.orbState==='speaking'){ VoiceEngine.stopSpeaking(); return; }
-      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='active'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(window.JarvisBrain ? JarvisBrain.greeting() : VoicePersonality.greet()); },400); }
+      if(!s.powered){ shockwave(); CityState.set({powered:true}); ParticleField.setPowered(true); document.body.dataset.cityState='active'; document.querySelectorAll('.building-card').forEach(function(c,i){ setTimeout(function(){ c.classList.add('is-powered'); },i*80); }); HUD.setStatus('ONLINE'); setTimeout(function(){ VoiceEngine.speak(window.JarvisBrain ? JarvisBrain.greeting() : VoicePersonality.greet()); },250); }
       else { toggle(); }
     });
   }
