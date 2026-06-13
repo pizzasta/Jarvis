@@ -25,6 +25,8 @@ var MODEL = process.env.JARVIS_MODEL || 'claude-opus-4-8';
 var ELEVEN_KEY = process.env.ELEVENLABS_API_KEY || '';
 var ELEVEN_VOICE = process.env.ELEVENLABS_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2';
 var ELEVEN_MODEL = process.env.ELEVENLABS_MODEL || 'eleven_turbo_v2_5';
+// Polygon.io live market data (key stays server-side).
+var POLYGON_KEY = process.env.POLYGON_API_KEY || '';
 var ROOT = __dirname;
 
 var MIME = {
@@ -124,6 +126,55 @@ function callEleven(text, voiceId, res) {
   req.end();
 }
 
+// ---- Polygon.io live market data ----
+function polyGet(pathWithQuery, cb) {
+  var sep = pathWithQuery.indexOf('?') === -1 ? '?' : '&';
+  var p = pathWithQuery + sep + 'apiKey=' + encodeURIComponent(POLYGON_KEY);
+  https.get({ hostname: 'api.polygon.io', path: p, headers: { 'Accept': 'application/json' } }, function(r) {
+    var c = '';
+    r.on('data', function(d) { c += d; });
+    r.on('end', function() {
+      try {
+        var j = JSON.parse(c);
+        if (r.statusCode >= 400) return cb(new Error((j && (j.error || j.message)) || ('Polygon ' + r.statusCode)));
+        cb(null, j);
+      } catch (e) { cb(e); }
+    });
+  }).on('error', cb);
+}
+function mapTk(t) {
+  return {
+    symbol: t.ticker,
+    price: (t.lastTrade && t.lastTrade.p) || (t.day && t.day.c) || (t.prevDay && t.prevDay.c) || null,
+    change: (t.todaysChange != null ? t.todaysChange : null),
+    changePct: (t.todaysChangePerc != null ? t.todaysChangePerc : null)
+  };
+}
+function qparam(u, key) {
+  var qs = (u.split('?')[1] || '');
+  var parts = qs.split('&');
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].indexOf(key + '=') === 0) return decodeURIComponent(parts[i].slice(key.length + 1));
+  }
+  return '';
+}
+function handleQuote(symbols, res) {
+  var clean = String(symbols || '').toUpperCase().replace(/[^A-Z0-9.,]/g, '').slice(0, 200);
+  if (!clean) return sendJSON(res, 400, { error: 'No symbols' });
+  polyGet('/v2/snapshot/locale/us/markets/stocks/tickers?tickers=' + encodeURIComponent(clean), function(e, j) {
+    if (e) return sendJSON(res, 502, { error: e.message });
+    sendJSON(res, 200, { quotes: ((j && j.tickers) || []).map(mapTk) });
+  });
+}
+function handleRecap(res) {
+  var out = { indices: [], gainers: [], losers: [] };
+  var pending = 3;
+  function done() { if (--pending === 0) sendJSON(res, 200, out); }
+  polyGet('/v2/snapshot/locale/us/markets/stocks/tickers?tickers=SPY,QQQ,IWM,DIA', function(e, j) { if (!e && j && j.tickers) out.indices = j.tickers.map(mapTk); done(); });
+  polyGet('/v2/snapshot/locale/us/markets/stocks/gainers', function(e, j) { if (!e && j && j.tickers) out.gainers = j.tickers.slice(0, 5).map(mapTk); done(); });
+  polyGet('/v2/snapshot/locale/us/markets/stocks/losers', function(e, j) { if (!e && j && j.tickers) out.losers = j.tickers.slice(0, 5).map(mapTk); done(); });
+}
+
 // ---- Static file serving ----
 function serveStatic(req, res) {
   var urlPath = decodeURIComponent(req.url.split('?')[0]);
@@ -153,7 +204,15 @@ var server = http.createServer(function(req, res) {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
   }
   if (req.url === '/api/health') {
-    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null });
+    return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null, markets: !!POLYGON_KEY });
+  }
+  if (req.url.split('?')[0] === '/api/quote') {
+    if (!POLYGON_KEY) return sendJSON(res, 503, { error: 'No POLYGON_API_KEY set on the server.' });
+    return handleQuote(qparam(req.url, 'symbols'), res);
+  }
+  if (req.url.split('?')[0] === '/api/recap') {
+    if (!POLYGON_KEY) return sendJSON(res, 503, { error: 'No POLYGON_API_KEY set on the server.' });
+    return handleRecap(res);
   }
   if (req.url.split('?')[0] === '/api/tts' && req.method === 'POST') {
     if (!ELEVEN_KEY) return sendJSON(res, 503, { error: 'No ELEVENLABS_API_KEY set on the server.' });
@@ -186,4 +245,5 @@ server.listen(PORT, function() {
   console.log('[JARVIS] Serving on http://localhost:' + PORT);
   console.log('[JARVIS] Claude API: ' + (API_KEY ? ('ENABLED (' + MODEL + ')') : 'DISABLED — set ANTHROPIC_API_KEY to enable live generation'));
   console.log('[JARVIS] ElevenLabs voice: ' + (ELEVEN_KEY ? ('ENABLED (voice ' + ELEVEN_VOICE + ')') : 'DISABLED — set ELEVENLABS_API_KEY for human-level DIVA voice'));
+  console.log('[JARVIS] Polygon market data: ' + (POLYGON_KEY ? 'ENABLED' : 'DISABLED — set POLYGON_API_KEY for live quotes in Trade Desk'));
 });

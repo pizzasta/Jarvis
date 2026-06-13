@@ -28,21 +28,35 @@ var AIClient = (function() {
   }
 
   var _tts = false;        // true when the server has an ElevenLabs key
+  var _markets = false;    // true when the server has a Polygon key
 
   function checkHealth() {
     _checked = true;
-    if (_isStaticHost()) { _available = false; _model = null; _tts = false; return Promise.resolve(false); }
+    if (_isStaticHost()) { _available = false; _model = null; _tts = false; _markets = false; return Promise.resolve(false); }
     // Guard the fetch so a 404 / network error / non-JSON body never throws.
     return fetch(_base()+'/api/health', { method: 'GET' })
       .then(function(r) { return (r && r.ok) ? r.json().catch(function(){ return null; }) : null; })
-      .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; _tts = !!(j && j.tts); return _available; })
-      .catch(function() { _available = false; _model = null; _tts = false; return false; });
+      .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; _tts = !!(j && j.tts); _markets = !!(j && j.markets); return _available; })
+      .catch(function() { _available = false; _model = null; _tts = false; _markets = false; return false; });
   }
 
   function available() { return _available === true; }
   function offline()   { return _available !== true; }   // true in demo mode
   function model()     { return _model; }
   function ttsAvailable() { return _tts === true; }
+  function marketsAvailable() { return _markets === true; }
+
+  // Live market data (independent of the Claude key — needs only POLYGON_API_KEY).
+  function quote(symbols) {
+    if (_markets !== true) return Promise.reject(new Error('markets offline'));
+    return fetch(_base() + '/api/quote?symbols=' + encodeURIComponent(symbols))
+      .then(function(r) { if (!r.ok) throw new Error('quote ' + r.status); return r.json(); })
+      .then(function(j) { return (j && j.quotes) || []; });
+  }
+  function recap() {
+    if (_markets !== true) return Promise.reject(new Error('markets offline'));
+    return fetch(_base() + '/api/recap').then(function(r) { if (!r.ok) throw new Error('recap ' + r.status); return r.json(); });
+  }
 
   // text -> Promise<objectURL> of spoken audio (rejects when TTS is unavailable).
   function tts(text) {
@@ -80,7 +94,7 @@ var AIClient = (function() {
     });
   }
 
-  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts };
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap };
 })();
 
 window.AIClient = AIClient;

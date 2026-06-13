@@ -96,6 +96,12 @@ It's one-click ready:
 3. Copy your deployed URL into **`js/config.js`** → `window.JARVIS_API_BASE = 'https://your-app.onrender.com';`
    and commit. The live site then uses that backend for live Claude + the ElevenLabs voice.
 
+- **Live market data (Polygon):** set `POLYGON_API_KEY` and the **Trade Desk**
+  agent auto-fills real prices — `/api/quote` and `/api/recap` (indices + top
+  gainers/losers). The key stays on the server. Without it, Trade Desk uses its
+  rule-based templates and shows how to wire the feed. *Educational only — not
+  financial advice.*
+
 Until `JARVIS_API_BASE` is set, **nothing changes** — DIVA keeps the current browser British voice.
 
 Without the server, those buttons explain how to enable live AI and the app keeps
