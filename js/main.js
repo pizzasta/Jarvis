@@ -223,18 +223,34 @@ var VoiceEngine = (function() {
     var v=(_synth.getVoices&&_synth.getVoices())||[];
     function isGB(x){ return /en[-_]?GB/i.test(x.lang||'') || /united kingdom|uk english|british/i.test(((x.name||'')+' '+(x.lang||''))); }
     var gb=v.filter(isGB);
-    // Prefer a British FEMALE voice; otherwise any British voice; otherwise null
-    // (null → we leave utterance.voice unset and let lang='en-GB' force the accent).
-    _voice = gb.find(function(x){ return /female|sonia|libby|hazel|kate|serena|stephanie|amy|emma|google uk english female/i.test(x.name||''); })
-          || gb.find(function(x){ return /google uk english/i.test(x.name||''); })
-          || gb[0]
-          || null;
+    // Score so the most human-sounding British female wins: natural/neural
+    // voices first, then known female UK voices, then any British voice.
+    function score(x){
+      var n=(x.name||'').toLowerCase(), s=0;
+      if(/natural|neural|online|enhanced|premium/.test(n)) s+=6;          // least robotic
+      if(/female|sonia|libby|hazel|kate|serena|stephanie|amy|emma|martha|aria/.test(n)) s+=3;
+      if(/google uk english female/.test(n)) s+=4;
+      if(/google/.test(n)) s+=1;
+      return s;
+    }
+    gb.sort(function(a,b){ return score(b)-score(a); });
+    _voice = gb[0] || null;   // null → leave voice unset, lang='en-GB' keeps the accent
   }
   if(_synth.onvoiceschanged!==undefined) _synth.onvoiceschanged=loadV;
   loadV();
   function setOrbState(s){ document.body.dataset.orbState=s; CityState.set({orbState:s,speaking:s==='speaking',listening:s==='listening'}); var lbl=document.getElementById('orb-label'), vs=document.getElementById('voice-status'); if(lbl) lbl.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'DIVA'; if(vs) vs.textContent=s==='speaking'?'SPEAKING':s==='listening'?'LISTENING':s==='thinking'?'THINKING':'READY'; }
   function appendConvo(msg,role){ var p=document.getElementById('convo-messages'); if(!p)return; var d=document.createElement('div'); d.className='convo-msg convo-msg--'+(role==='user'?'user':'ai'); d.textContent=msg; p.appendChild(d); p.scrollTop=p.scrollHeight; }
-  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var u=new SpeechSynthesisUtterance(text); loadV(); u.lang='en-GB'; if(_voice) u.voice=_voice; u.rate=opts.rate||0.94; u.pitch=opts.pitch||1.14; u.volume=opts.volume||1; u.lang='en-GB'; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
+  // Smooth text so TTS flows naturally instead of clipping at every dash/comma.
+  function _naturalise(text){
+    return String(text)
+      .replace(/\s*[—–]\s*/g, ', ')      // em/en dashes → natural comma pause
+      .replace(/\s+-\s+/g, ', ')          // spaced hyphen → comma
+      .replace(/\.\.\./g, '…')            // ellipsis as one glyph (one short pause)
+      .replace(/([,;:])\1+/g, '$1')        // collapse doubled punctuation
+      .replace(/\s{2,}/g, ' ')             // no big gaps
+      .trim();
+  }
+  function speak(text,opts){ opts=opts||{}; if(_synth.speaking) _synth.cancel(); var said=_naturalise(text); var u=new SpeechSynthesisUtterance(said); loadV(); u.lang='en-GB'; if(_voice) u.voice=_voice; u.rate=opts.rate||0.98; u.pitch=opts.pitch||1.04; u.volume=opts.volume||1; u.onstart=function(){ setOrbState('speaking'); }; u.onend=function(){ setOrbState('idle'); }; u.onerror=function(){ setOrbState('idle'); }; appendConvo(text,'ai'); _synth.speak(u); }
   function stopSpeaking(){ if(_synth.speaking){_synth.cancel();setOrbState('idle');} }
   function stopListening(){ if(_recog){_recog.stop();_listening=false;setOrbState('idle');} }
   function _routeTo(route, reply){
