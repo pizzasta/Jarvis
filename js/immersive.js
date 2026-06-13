@@ -139,13 +139,13 @@ var Immersive = (function() {
 
   // ---- Cinematic boot sequence ----
   var BOOT_LINES = [
-    '> booting JARVIS core ............ <span class="ok">OK</span>',
+    '> booting DIVA core ............ <span class="ok">OK</span>',
     '> mounting neural modules ........ <span class="ok">OK</span>',
     '> calibrating voice synth ........ <span class="ok">OK</span>',
     '> loading cities: creator · mind · vision · launch · empire',
     '> linking agents (15) ............ <span class="ok">OK</span>',
     '> establishing uplink ............ <span class="ok">OK</span>',
-    '> good day, Jess. JARVIS is ready.'
+    '> right then, boss. DIVA is ready.'
   ];
   function runBoot() {
     var boot = document.getElementById('boot'); if (!boot) return;

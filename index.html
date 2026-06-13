@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>JARVIS — AI City</title>
+<title>DIVA — AI City</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23090012'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23ff2d78' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='11' fill='none' stroke='%23ff6bac' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='4.5' fill='%23ff6bac'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,10 +24,10 @@
 <body data-city-state="idle" data-orb-state="idle">
 
 <!-- Cinematic boot overlay -->
-<div class="boot" id="boot" role="status" aria-label="JARVIS booting">
+<div class="boot" id="boot" role="status" aria-label="DIVA booting">
   <button class="boot__skip" type="button">SKIP</button>
   <div class="boot__ring" aria-hidden="true"></div>
-  <div class="boot__title">JARVIS</div>
+  <div class="boot__title">DIVA</div>
   <pre class="boot__log" aria-live="polite"></pre>
   <div class="boot__bar"><span></span></div>
   <div class="boot__hint">TAP THE ORB TO ENGAGE</div>
@@ -64,7 +64,7 @@
 
 <div id="city-scene" class="city-scene" role="main">
 <header class="hud-top" aria-label="City HUD">
-  <div class="hud-logo"><span class="hud-logo__text">JARVIS</span><span class="hud-logo__version">v3.0</span></div>
+  <div class="hud-logo"><span class="hud-logo__text">DIVA</span><span class="hud-logo__version">v3.0</span></div>
   <div class="hud-status"><span class="hud-status__dot"></span><span class="hud-status__label" id="status-label">STANDBY</span></div>
   <nav class="hud-nav" id="hud-nav" aria-label="City navigation">
     <button class="hud-nav__btn" data-route="home" aria-current="page">HOME</button>
@@ -120,7 +120,7 @@
     <span></span><span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
   </div>
-  <button class="orb" id="master-orb" aria-label="Activate JARVIS voice assistant" aria-pressed="false">
+  <button class="orb" id="master-orb" aria-label="Activate DIVA voice assistant" aria-pressed="false">
     <div class="orb__inner" aria-hidden="true">
       <div class="orb__core"></div>
       <div class="orb__scan"></div>
@@ -133,7 +133,7 @@
         <line x1="4" y1="32" x2="14" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         <line x1="50" y1="32" x2="60" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <span class="orb__label" id="orb-label">JARVIS</span>
+      <span class="orb__label" id="orb-label">DIVA</span>
     </div>
   </button>
 </div>
@@ -142,7 +142,7 @@
   <div class="convo-panel__messages" id="convo-messages" aria-live="polite" aria-atomic="false"></div>
   <div class="convo-panel__input-row">
     <div class="convo-input-wrap">
-      <input type="text" id="convo-text-input" class="convo-text-input" placeholder="Type a message..." aria-label="Type message to JARVIS" autocomplete="off" />
+      <input type="text" id="convo-text-input" class="convo-text-input" placeholder="Type a message..." aria-label="Type message to DIVA" autocomplete="off" />
     </div>
     <button class="convo-send-btn" id="convo-send-btn" aria-label="Send message">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

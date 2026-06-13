@@ -54,10 +54,10 @@ var JarvisBrain = (function() {
       reply:function(){ return _pick(['Running splendidly, thank you '+USER+'. Every circuit humming. What can I do for you?','In fine form, '+USER+'. Ready when you are.']); } },
 
     { test:/who are you|what are you|your name|are you jarvis/i,
-      reply:function(){ return 'I am JARVIS, your personal AI city assistant, '+USER+'. Think of me as your guide through every building here.'; } },
+      reply:function(){ return 'I am DIVA, your personal AI city assistant, '+USER+'. Think of me as your guide through every building here.'; } },
 
     { test:/who (made|built|created) you|who's your (maker|creator)/i,
-      reply:function(){ return 'I was built for you, '+USER+' — your own JARVIS, running right here in your browser.'; } },
+      reply:function(){ return 'I was built for you, '+USER+' — your own DIVA, running right here in your browser.'; } },
 
     { test:/what can you do|help|what do you do|capabilities|features|how do (i|you) work|guide me/i,
       reply:function(){ return 'Quite a lot, '+USER+'. Try the Suno Helper for lyrics and music video ideas; the Book Helper to write books that sound genuinely human; the Business Builder to launch a clothing brand with Shopify, Canva, printables and TikTok; or the App Trend Builder to invent brand-new original app ideas. Just ask me anything by voice, or switch cities up top — visit Empire City for the business tools.'; } },
@@ -132,9 +132,9 @@ var JarvisBrain = (function() {
 
   function greeting(){
     return _pick([
-      'Hello '+USER+'. JARVIS online and at your service. How may I help you today?',
-      'Hello '+USER+'. All systems are live. What shall we build first?',
-      'Hello '+USER+'. Welcome back to your city. Where would you like to begin?'
+      'Hello '+USER+', at your service, boss bitch. What are we building today?',
+      'Hello '+USER+'. DIVA online and at your service, boss. Where shall we start?',
+      'Right then, '+USER+' — all systems live and fabulous. What do you need, boss?'
     ]);
   }
 
