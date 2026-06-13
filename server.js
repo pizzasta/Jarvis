@@ -141,7 +141,17 @@ function serveStatic(req, res) {
   });
 }
 
+var ALLOW_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+
 var server = http.createServer(function(req, res) {
+  // CORS so a hosted backend can serve the static (GitHub Pages) site.
+  if (req.url.indexOf('/api/') === 0) {
+    res.setHeader('Access-Control-Allow-Origin', ALLOW_ORIGIN);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+  }
   if (req.url === '/api/health') {
     return sendJSON(res, 200, { ok: !!API_KEY, model: API_KEY ? MODEL : null, tts: !!ELEVEN_KEY, voice: ELEVEN_KEY ? ELEVEN_VOICE : null });
   }

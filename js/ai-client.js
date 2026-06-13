@@ -9,9 +9,14 @@ var AIClient = (function() {
   var _model = null;
   var _checked = false;
 
+  // Optional hosted backend (set window.JARVIS_API_BASE in js/config.js).
+  function _base() { try { return (window.JARVIS_API_BASE ? String(window.JARVIS_API_BASE) : '').replace(/\/+$/, ''); } catch (e) { return ''; } }
+
   // A static host (GitHub Pages, file://, *.github.io, codepen, etc.) has no
   // /api backend — don't even probe it, so there is no 404 in the console.
+  // EXCEPTION: if a remote backend URL is configured, we use that instead.
   function _isStaticHost() {
+    if (_base()) return false;
     try {
       if (location.protocol === 'file:') return true;
       var h = (location.hostname || '').toLowerCase();
@@ -28,7 +33,7 @@ var AIClient = (function() {
     _checked = true;
     if (_isStaticHost()) { _available = false; _model = null; _tts = false; return Promise.resolve(false); }
     // Guard the fetch so a 404 / network error / non-JSON body never throws.
-    return fetch('/api/health', { method: 'GET' })
+    return fetch(_base()+'/api/health', { method: 'GET' })
       .then(function(r) { return (r && r.ok) ? r.json().catch(function(){ return null; }) : null; })
       .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; _tts = !!(j && j.tts); return _available; })
       .catch(function() { _available = false; _model = null; _tts = false; return false; });
@@ -42,7 +47,7 @@ var AIClient = (function() {
   // text -> Promise<objectURL> of spoken audio (rejects when TTS is unavailable).
   function tts(text) {
     if (_tts !== true) return Promise.reject(new Error('tts offline'));
-    return fetch('/api/tts', {
+    return fetch(_base()+'/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: String(text || '') })
@@ -59,7 +64,7 @@ var AIClient = (function() {
     if (offline()) {
       return Promise.reject(new Error('AI offline — running in demo mode (no backend). Run "node server.js" with an API key to enable live generation.'));
     }
-    return fetch('/api/generate', {
+    return fetch(_base()+'/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

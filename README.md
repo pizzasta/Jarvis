@@ -83,6 +83,21 @@ When it's live:
   with `ELEVENLABS_VOICE_ID`). The audio is streamed via `/api/tts` so the key
   stays on the server. Without it, DIVA uses the browser's built-in British voice.
 
+### Make the human voice work on the live (GitHub Pages) site
+
+The Pages site is static, so the human voice needs the backend hosted somewhere.
+It's one-click ready:
+
+1. Deploy this repo to a Node host (free tiers work). On **Render**: New → Blueprint
+   → pick this repo (it reads `render.yaml`), or use the included `Dockerfile`/`Procfile`
+   on Railway/Fly/etc. `npm start` runs `node server.js`.
+2. In the host's dashboard set the secrets: `ANTHROPIC_API_KEY`, `ELEVENLABS_API_KEY`
+   (and optionally `ELEVENLABS_VOICE_ID`, `ALLOWED_ORIGIN`). Keys live there, never in the repo.
+3. Copy your deployed URL into **`js/config.js`** → `window.JARVIS_API_BASE = 'https://your-app.onrender.com';`
+   and commit. The live site then uses that backend for live Claude + the ElevenLabs voice.
+
+Until `JARVIS_API_BASE` is set, **nothing changes** — DIVA keeps the current browser British voice.
+
 Without the server, those buttons explain how to enable live AI and the app keeps
 working on templates. Copy `.env.example` for the variables you can set.
 
