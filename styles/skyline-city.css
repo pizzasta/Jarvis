@@ -435,3 +435,10 @@ body[data-city-state="active"] .fog { opacity: 0.7; }
 .agent-console__outlbl{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#b58fb0;display:flex;justify-content:space-between;align-items:center;}
 .agent-console__out{background:rgba(255,45,120,.05);border:1px solid color-mix(in srgb,var(--c,#ff2d78) 22%,transparent);border-radius:10px;padding:.9rem 1rem;color:#f3e9f5;font-family:'Rajdhani',sans-serif;font-size:.9rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;min-height:90px;max-height:320px;overflow-y:auto;}
 .agent-console__outacts{display:flex;gap:.4rem;flex-wrap:wrap;}
+
+/* Automation indicator + Comms Tower email composer */
+.agent-console__auto{font-family:'Orbitron',sans-serif;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#9a7596;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:.28rem .65rem;align-self:flex-start;}
+.agent-console__auto.is-on{color:#04140c;background:linear-gradient(135deg,#2bd576,#7bf7ad);border:none;font-weight:800;box-shadow:0 0 12px rgba(43,213,118,.4);}
+.comms-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.comms-grid .agent-console__lbl{display:flex;flex-direction:column;gap:.25rem;}
+@media(max-width:560px){.comms-grid{grid-template-columns:1fr;}}
