@@ -381,6 +381,7 @@ var BuildingWorkspace = (function() {
     if(id==='trade-desk'){ if(body){ body.innerHTML=''; if(typeof TradeDesk!=='undefined'){ TradeDesk.mount(body,opts); } else { body.innerHTML='<p style="color:#ffe082;padding:2rem">Loading Trade Desk...</p>'; } } return; }
     if(id==='income-lab'){ if(body){ body.innerHTML=''; if(typeof IncomeLab!=='undefined'){ IncomeLab.mount(body,opts); } else { body.innerHTML='<p style="color:#7bf7ad;padding:2rem">Loading AI Income Lab...</p>'; } } return; }
     if(id==='automation-studio'){ if(body){ body.innerHTML=''; if(typeof AutomationStudio!=='undefined'){ AutomationStudio.mount(body,opts); } else { body.innerHTML='<p style="color:#c4bcff;padding:2rem">Loading Automation Studio...</p>'; } } return; }
+    if(id==='comms-tower'){ _commsComposer(id, body, opts); return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
     var chips=b.actions.map(function(a){ return '<button class="agent-console__do" type="button" data-action="'+a.replace(/"/g,'')+'">'+a+'</button>'; }).join('');
@@ -391,6 +392,7 @@ var BuildingWorkspace = (function() {
           '<div class="agent-console__id"><div class="agent-console__name">'+b.title+'</div><div class="agent-console__desc">'+b.description+'</div></div>',
           '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
         '</div>',
+        _autoBadgeHTML(),
         '<label class="agent-console__lbl" for="agent-input">Give '+b.title+' something to work on</label>',
         '<textarea class="agent-console__input" id="agent-input" rows="3" placeholder="Paste text, a topic, or a question — then tap an action, or Ask."></textarea>',
         '<div class="agent-console__chips">'+chips+'<button class="agent-console__do agent-console__do--ask" id="agent-ask" type="button">⚡ Ask '+b.title+'</button></div>',
@@ -457,6 +459,75 @@ var BuildingWorkspace = (function() {
     } else {
       if(out) out.textContent=_agentTemplate(b, action, input);
     }
+  }
+  function _autoBadgeHTML(){
+    var on=!!(window.AIClient && AIClient.hookAvailable && AIClient.hookAvailable());
+    return '<div class="agent-console__auto'+(on?' is-on':'')+'">'+(on?'⚡ Automation: connected':'⚡ Automation: off — add a webhook in ✨ Connect AI')+'</div>';
+  }
+  // ---- Comms Tower: a real email composer (AI draft + send) ----
+  function _commsComposer(id, body, opts){
+    if(!body) return; opts=opts||{};
+    var b=AgentRegistry.getById(id)||{icon:'📡',title:'COMMS TOWER',description:'Compose & send email with AI'};
+    body.innerHTML=[
+      '<div class="agent-console">',
+        '<div class="agent-console__head">',
+          '<div class="agent-console__icon">'+b.icon+'</div>',
+          '<div class="agent-console__id"><div class="agent-console__name">'+b.title+'</div><div class="agent-console__desc">Compose, draft &amp; send email with AI</div></div>',
+          '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
+        '</div>',
+        _autoBadgeHTML(),
+        '<div class="comms-grid">',
+          '<label class="agent-console__lbl">To<input class="agent-console__input" id="comms-to" type="email" placeholder="name@email.com"></label>',
+          '<label class="agent-console__lbl">Subject<input class="agent-console__input" id="comms-subject" type="text" placeholder="Subject line"></label>',
+        '</div>',
+        '<label class="agent-console__lbl" for="comms-body">Message (or a brief to draft from)</label>',
+        '<textarea class="agent-console__input" id="comms-body" rows="6" placeholder="Write the email — or jot a brief and tap Draft with AI…"></textarea>',
+        '<div class="agent-console__chips">',
+          '<button class="agent-console__do agent-console__do--ask" id="comms-draft" type="button">✨ Draft with AI</button>',
+          '<button class="agent-console__do" id="comms-polish" type="button">🪄 Polish</button>',
+          '<button class="ws-chip ws-chip--primary" id="comms-send" type="button">📨 Send</button>',
+          '<span class="agent-console__count" id="comms-status"></span>',
+        '</div>',
+        '<div class="agent-console__outlbl">Preview</div>',
+        '<div class="agent-console__out" id="comms-out">Your email preview appears here.</div>',
+      '</div>'
+    ].join('');
+    function val(i){ var e=document.getElementById(i); return e?e.value.trim():''; }
+    function setStatus(t){ var st=document.getElementById('comms-status'); if(st) st.textContent=t; }
+    function setPreview(){ var o=document.getElementById('comms-out'); if(o) o.textContent='To: '+(val('comms-to')||'—')+'\nSubject: '+(val('comms-subject')||'—')+'\n\n'+(val('comms-body')||''); }
+    if(opts.prefill){ var bd=document.getElementById('comms-body'); if(bd) bd.value=opts.prefill; }
+    ['comms-to','comms-subject','comms-body'].forEach(function(i){ var e=document.getElementById(i); if(e) e.addEventListener('input', setPreview); });
+    var draft=document.getElementById('comms-draft');
+    if(draft) draft.addEventListener('click', function(){
+      if(!(window.AIClient && AIClient.available && AIClient.available())){ setStatus('connect AI to draft'); return; }
+      var subj=val('comms-subject'), brief=val('comms-body')||subj||'a friendly outreach email';
+      setStatus('drafting…');
+      AIClient.generate({ system:'You write clear, warm, effective emails. Output ONLY the email body — no subject line, no markdown.', prompt:'Write an email. '+(subj?('Subject: '+subj+'. '):'')+'Brief: '+brief, max_tokens:700 })
+        .then(function(t){ var bd=document.getElementById('comms-body'); if(bd) bd.value=(t||'').trim(); setPreview(); setStatus(''); })
+        .catch(function(){ setStatus('draft failed'); });
+    });
+    var polish=document.getElementById('comms-polish');
+    if(polish) polish.addEventListener('click', function(){
+      if(!(window.AIClient && AIClient.available && AIClient.available())){ setStatus('connect AI to polish'); return; }
+      var m=val('comms-body'); if(!m){ setStatus('write something first'); return; }
+      setStatus('polishing…');
+      AIClient.generate({ system:'You are an editor. Polish this email to be clear, friendly and professional. Output ONLY the improved body.', prompt:m, max_tokens:700 })
+        .then(function(t){ var bd=document.getElementById('comms-body'); if(bd) bd.value=(t||'').trim()||m; setPreview(); setStatus(''); })
+        .catch(function(){ setStatus('polish failed'); });
+    });
+    var send=document.getElementById('comms-send');
+    if(send) send.addEventListener('click', function(){
+      var to=val('comms-to'), s=val('comms-subject'), m=val('comms-body');
+      if(!to||!m){ setStatus('need a To and a message'); return; }
+      if(!(window.AIClient && AIClient.mailAvailable && AIClient.mailAvailable())){
+        var o=document.getElementById('comms-out'); if(o) o.textContent='No way to send yet. Add an automation webhook in ✨ Connect AI (e.g. Zapier → Send Email), or deploy the server with RESEND_API_KEY. Then Send works.'; setStatus(''); return;
+      }
+      setStatus('sending…');
+      AIClient.sendEmail({ to:to, subject:s||'(no subject)', text:m })
+        .then(function(){ setStatus('✓ sent'); if(typeof VoiceEngine!=='undefined') VoiceEngine.speak('Email sent, boss.'); if(window.CityMemory) CityMemory.add({category:'email',title:'Sent: '+(s||to),content:'To '+to+' — '+m.slice(0,90),building:'comms-tower',tags:['email','sent']}); })
+        .catch(function(e){ setStatus('failed: '+((e&&e.message)||'')); });
+    });
+    setPreview();
   }
   // ---- Per-agent memory (every building is a real agent that saves info) ----
   function _agentKey(id){ return 'diva_agent_'+id; }

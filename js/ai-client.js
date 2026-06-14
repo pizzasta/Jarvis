@@ -29,15 +29,16 @@ var AIClient = (function() {
 
   var _tts = false;        // true when the server has an ElevenLabs key
   var _markets = false;    // true when the server has a Polygon key
+  var _mail = false;       // true when the server has a Resend key
 
   function checkHealth() {
     _checked = true;
-    if (_isStaticHost()) { _available = false; _model = null; _tts = false; _markets = false; return Promise.resolve(false); }
+    if (_isStaticHost()) { _available = false; _model = null; _tts = false; _markets = false; _mail = false; return Promise.resolve(false); }
     // Guard the fetch so a 404 / network error / non-JSON body never throws.
     return fetch(_base()+'/api/health', { method: 'GET' })
       .then(function(r) { return (r && r.ok) ? r.json().catch(function(){ return null; }) : null; })
-      .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; _tts = !!(j && j.tts); _markets = !!(j && j.markets); return _available; })
-      .catch(function() { _available = false; _model = null; _tts = false; _markets = false; return false; });
+      .then(function(j) { _available = !!(j && j.ok); _model = (j && j.model) || null; _tts = !!(j && j.tts); _markets = !!(j && j.markets); _mail = !!(j && j.mail); return _available; })
+      .catch(function() { _available = false; _model = null; _tts = false; _markets = false; _mail = false; return false; });
   }
 
   function available() { return _available === true || !!getKey(); }   // server OR browser key
@@ -45,6 +46,18 @@ var AIClient = (function() {
   function model()     { return _model || (getKey() ? 'claude-opus-4-8' : null); }
   function ttsAvailable() { return _tts === true; }
   function marketsAvailable() { return _markets === true || !!getPolyKey(); }
+  function mailAvailable() { return _mail === true || !!getHook(); }
+
+  // Send a real email: hosted Resend when present, else via the automation webhook.
+  function sendEmail(o) {
+    o = o || {};
+    if (_mail === true && _serverOn()) {
+      return fetch(_base() + '/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) })
+        .then(function(r) { return r.json().catch(function(){ return {}; }).then(function(j) { if (!r.ok) throw new Error(j.error || ('mail ' + r.status)); return j; }); });
+    }
+    if (getHook()) { return trigger({ type: 'email', to: o.to, subject: o.subject, text: o.text, source: 'DIVA' }); }
+    return Promise.reject(new Error('No email method — set RESEND_API_KEY on the server, or add an automation webhook in Connect AI.'));
+  }
 
   // ---- Bring-your-own Polygon key (browser-direct market data) ----
   var POLY_STORE = 'diva_polygon_key';
@@ -185,7 +198,7 @@ var AIClient = (function() {
     return Promise.reject(new Error('AI offline — tap "Connect AI" and paste your Anthropic API key, or run the server.'));
   }
 
-  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey, getPolyKey: getPolyKey, setPolyKey: setPolyKey, clearPolyKey: clearPolyKey, getHook: getHook, setHook: setHook, clearHook: clearHook, hookAvailable: hookAvailable, trigger: trigger };
+  return { checkHealth: checkHealth, available: available, offline: offline, model: model, generate: generate, ttsAvailable: ttsAvailable, tts: tts, marketsAvailable: marketsAvailable, quote: quote, recap: recap, getKey: getKey, setKey: setKey, clearKey: clearKey, getPolyKey: getPolyKey, setPolyKey: setPolyKey, clearPolyKey: clearPolyKey, getHook: getHook, setHook: setHook, clearHook: clearHook, hookAvailable: hookAvailable, trigger: trigger, mailAvailable: mailAvailable, sendEmail: sendEmail };
 })();
 
 window.AIClient = AIClient;
