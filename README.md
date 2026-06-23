@@ -26,6 +26,12 @@ windows. Switching cities swaps which agents (towers) appear.
 
 Switch cities from the rail near the top. Each city has its own buildings:
 
+> **Every tower is an agent with a job — not decoration.** Each building exists to produce a
+> useful deliverable you can act on (a priority plan, an image prompt, a memory structure, an AI
+> workflow, a drafted message, a risk check, and so on). Even the abstract-sounding *core* towers
+> (DIVA Core, Vision Lab, Data Vault, Neural Forge, Comms Tower, Sentinel) do real work — see
+> **[Real-world actions](#real-world-actions-agents-that-do-things)** below.
+
 - **🎨 Creator City** — **Suno Helper**, **Book Helper**, Design Tower, Editing Library
 - **🧠 Mind City** — JARVIS Core, Memory Vault, Research District, Neural Forge
 - **👁 Vision City** — Vision Lab, Data Vault, Comms Tower, Sentinel
@@ -103,6 +109,23 @@ It's one-click ready:
   financial advice.*
 
 ## Real-world actions (agents that DO things)
+
+Every building — including the abstract-sounding *core* towers — is a working agent whose chips map
+to a clear user goal and return a **concrete deliverable** (offline templates, or full AI output
+when **✨ Connect AI** is on). No more "for-looks" checklists:
+
+| Tower | Job (user goal) | Deliverable it produces |
+| --- | --- | --- |
+| 🧠 **DIVA Core** | Untangle messy goals | A **priority plan** — top-3 + backlog + first step |
+| 👁 **Vision Lab** | Turn an idea into visuals | A **visual brief + ready-to-paste image prompts** |
+| 📚 **Data Vault** | Organise scattered notes | A **memory structure** — folders, tags, cheat sheet |
+| ⚡ **Neural Forge** | Stop redoing the same task | A **reusable AI workflow / prompt system** |
+| 📡 **Comms Tower** | Send the message | A **drafted email / reply** (send it via a webhook) |
+| 🛡 **Sentinel** | Ship safely | A **risk gate** — red flags + a safer version |
+| 📝 **Editing Library** | Make text human | **Polished, ready-to-publish copy** |
+| 🔬 **Research District** | Answer a question well | A **research plan + key findings** |
+| 🧱 **Project Lab** | Actually ship a project | A **sprint plan** — tasks, milestones, retro |
+| 🛠 **Operations Center** | Automate the boring stuff | An **automation map** — trigger → action + SOP |
 
 - **Automation webhook (works with no server):** in **✨ Connect AI** paste a free
   **Zapier Catch Hook / Make / n8n** webhook URL. Every agent's **⚡ Run automation**
