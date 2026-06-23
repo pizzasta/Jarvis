@@ -37,6 +37,7 @@ Switch cities from the rail near the top. Each city has its own buildings:
 - **👁 Vision City** — Vision Lab, Data Vault, Comms Tower, Sentinel
 - **🚀 Launch City** — Project Lab, Operations Center, Design Tower, Data Vault
 - **👑 Empire City** — **Business Builder**, **App Trend Builder**, Design Tower, Project Lab
+- **🧭 Goal Stack** — **Goal Concierge**, **Content Engine**, **Offer Lab**, **Learning Coach**, **Life Admin**, Automation Studio
 
 ### Empire City guides
 
@@ -50,6 +51,25 @@ Switch cities from the rail near the top. Each city has its own buildings:
    mechanics, audiences and twists, then passing each through a **clone filter** so it never
    copies a known app. Expand any idea into a full spec (problem, features, monetization, tech
    stack, MVP plan, go-to-market), browse a **trend radar**, and generate registrable app names.
+
+### Goal Stack city
+
+🧭 **Goal Stack** is the low-effort, outcome-first city: instead of picking a tower by how it
+looks, you pick an agent by the result you want. Every agent here returns a **copy / save /
+automation-ready deliverable** (and full AI output when **✨ Connect AI** is on).
+
+| Agent | Tell it… | Deliverable |
+| --- | --- | --- |
+| 🧭 **Goal Concierge** | "Where do I start?" / your goal | A **goal stack** — which agents to use, in order, + first step |
+| 🎬 **Content Engine** | a topic or niche | A **content system** — a week of hooks/posts + repurpose + calendar |
+| 🏷 **Offer Lab** | a skill or product | An **offer draft** — name, promise, bonuses, pricing, sales-page skeleton |
+| 🎓 **Learning Coach** | anything to learn | A **learning loop** — fast 3-week plan + practice loop to make it stick |
+| 🗂 **Life Admin** | life chaos | A **life/admin system** — capture + routine + checklist + declutter rule |
+| 🤖 **Automation Studio** | any repeat task | A **workflow** to run the above on autopilot |
+
+DIVA also routes here automatically: ask by voice or text about content, an offer, learning
+something, a routine, or *"where do I start?"* and she opens the right Goal Stack agent for you.
+
 
 ### The two headline guides (Creator City)
 
