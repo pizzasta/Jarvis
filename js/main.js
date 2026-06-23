@@ -32,6 +32,11 @@ var AgentRegistry = (function() {
     { id:'trade-desk',        icon:'📈', title:'TRADE DESK',          description:'Live data, trade ideas, strategy & risk', theme:{primaryColor:'#ffb300',secondaryColor:'#ffe082'}, actions:['Ideas','Watchlist','Strategy','Risk'], memory:{} },
     { id:'income-lab',        icon:'💸', title:'AI INCOME LAB',       description:'Rich, automated AI income ideas — $0 upfront', theme:{primaryColor:'#2bd576',secondaryColor:'#ffd54f'}, actions:['Ideas','Faceless','Products','Plan'], memory:{} },
     { id:'automation-studio', icon:'🤖', title:'AUTOMATION STUDIO',   description:'AI workflows & agents to run it on autopilot', theme:{primaryColor:'#8a7dff',secondaryColor:'#c4bcff'}, actions:['Workflow','Agent','Leads','SOP'], memory:{} },
+    { id:'goal-concierge',    icon:'\uD83E\uDDED', title:'GOAL CONCIERGE',     description:'Tell it your goal and it routes you to the right agent + a plan', theme:{primaryColor:'#ff2d78',secondaryColor:'#ff8fc0'}, actions:['Where Do I Start','Goal Stack','Pick Agents','Next Step'], memory:{} },
+    { id:'content-engine',    icon:'\uD83C\uDFAC', title:'CONTENT ENGINE',      description:'Turn one idea into a week of posts, captions & a content system', theme:{primaryColor:'#00e5ff',secondaryColor:'#7af0ff'}, actions:['Content Plan','Hooks','Repurpose','Calendar'], memory:{} },
+    { id:'offer-lab',         icon:'\uD83C\uDFF7', title:'OFFER LAB',           description:'Turn a skill or product into an irresistible offer you can sell', theme:{primaryColor:'#ffb300',secondaryColor:'#ffd86b'}, actions:['Build Offer','Pricing','Sales Page','Bonuses'], memory:{} },
+    { id:'learning-coach',    icon:'\uD83C\uDF93', title:'LEARNING COACH',      description:'Turn anything you want to learn into a fast, stickable plan', theme:{primaryColor:'#9d4edd',secondaryColor:'#c9a0ff'}, actions:['Learning Plan','Roadmap','Practice Loop','Quiz Me'], memory:{} },
+    { id:'life-admin',        icon:'\uD83D\uDDC2', title:'LIFE ADMIN',          description:'Turn life chaos into simple systems, routines & checklists', theme:{primaryColor:'#2bd576',secondaryColor:'#8ce9b4'}, actions:['Build System','Routine','Checklist','Declutter'], memory:{} },
   ];
   function getAll() { return _b; }
   function getById(id) { return _b.find(function(b){ return b.id===id; }) || null; }
@@ -46,7 +51,8 @@ var CityManager = (function() {
     { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
     { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] },
     { id:'empire',  name:'EMPIRE CITY',  icon:'👑', tagline:'Brands, business, trading & new apps', accent:'#00e676', accent2:'#69f0ae', buildings:['business-builder','app-trend-builder','trade-desk','design-tower','project-lab'] },
-    { id:'wealth',  name:'WEALTH CITY',  icon:'💸', tagline:'Automated AI income, $0 upfront',     accent:'#2bd576', accent2:'#ffd54f', buildings:['income-lab','automation-studio','business-builder','trade-desk','app-trend-builder'] }
+    { id:'wealth',  name:'WEALTH CITY',  icon:'💸', tagline:'Automated AI income, $0 upfront',     accent:'#2bd576', accent2:'#ffd54f', buildings:['income-lab','automation-studio','business-builder','trade-desk','app-trend-builder'] },
+    { id:'goalstack', name:'GOAL STACK', icon:'\uD83E\uDDED', tagline:'Pick agents by outcome, low effort', accent:'#ff2d78', accent2:'#7af0ff', buildings:['goal-concierge','content-engine','offer-lab','learning-coach','life-admin','automation-studio'] }
   ];
   var _active = 'creator';
   function all() { return _cities; }
@@ -219,7 +225,10 @@ var JARVIS_SYSTEM = 'You are DIVA, Jess\'s personal AI assistant in a neon AI-ci
   'Address her as "Jess" or "boss", with playful confidence. ' +
   'Keep replies concise and spoken-friendly (1-3 sentences) since they are read aloud. ' +
   'You can help with music (Suno Helper), books (Book Helper), building a clothing brand ' +
-  '(Business Builder: Shopify, Canva, printables, TikTok), and inventing original app ideas (App Trend Builder).';
+  '(Business Builder: Shopify, Canva, printables, TikTok), and inventing original app ideas (App Trend Builder). ' +
+  'You can also help with content (Content Engine: posts, captions, calendars), offers (Offer Lab: pricing, sales pages), ' +
+  'learning plans (Learning Coach), and personal systems & routines (Life Admin). ' +
+  'When Jess is unsure where to start, the Goal Concierge builds a goal stack and points her to the right agents in the Goal Stack city.';
 
 var VoiceEngine = (function() {
   var _synth=window.speechSynthesis, _recog=null, _voice=null, _listening=false, _audio=null;
@@ -511,6 +520,60 @@ var BuildingWorkspace = (function() {
           '\nTrigger \u2192 Action:\n- When [event in '+T+' happens] \u2192 do [step 1] \u2192 then [step 2] \u2192 notify [you/channel].\n'+
           '\nSOP (so a human or bot can run it): 1) check input, 2) run the steps above, 3) log the result.\n'+
           '\nWire it up: paste a Zapier/Make/n8n webhook in Connect AI and the \u26a1 Run automation button fires this for real.';
+      },
+      'goal-concierge': function(){
+        return 'GOAL STACK \u2014 '+T+'\n'+
+          '\nYour goal: '+T+'\n'+
+          '\nDo this in order:\n'+
+          '1. Clarify \u2014 write '+T+' as one measurable outcome + a deadline.\n'+
+          '2. Pick your stack (Goal Stack city):\n'+
+          '   \u2022 Content Engine \u2192 if '+T+' needs an audience / posts.\n'+
+          '   \u2022 Offer Lab \u2192 if '+T+' needs something to sell.\n'+
+          '   \u2022 Learning Coach \u2192 if '+T+' needs a new skill.\n'+
+          '   \u2022 Life Admin \u2192 if '+T+' needs routines / systems.\n'+
+          '   \u2022 Automation Studio \u2192 to put any of it on autopilot.\n'+
+          '\nFirst step right now: open the top agent above and run its first chip on '+T+'.';
+      },
+      'content-engine': function(){
+        return 'CONTENT SYSTEM \u2014 '+T+'\n'+
+          '\nOne idea \u2192 a week of content about '+T+':\n'+
+          'Mon (hook): \"The #1 mistake people make with '+T+'\"\n'+
+          'Tue (how-to): 3 quick steps to '+T+'\n'+
+          'Wed (story): how '+T+' changed something for you\n'+
+          'Thu (list): 5 tools/tips for '+T+'\n'+
+          'Fri (myth): what everyone gets wrong about '+T+'\n'+
+          'Sat (proof): a result / before-after\n'+
+          'Sun (CTA): invite them to the next step\n'+
+          '\nRepurpose each post \u2192 short video script + 1 carousel + 1 email. Batch on one day, schedule the rest.';
+      },
+      'offer-lab': function(){
+        return 'OFFER DRAFT \u2014 '+T+'\n'+
+          '\nThe offer: a clear result around '+T+' for a specific person.\n'+
+          '\nName: \"The '+T+' [Result] System\"\n'+
+          'Promise: get [specific outcome] without [main pain] in [timeframe].\n'+
+          'What\u2019s inside: core deliverable + 2 bonuses that remove objections.\n'+
+          'Price: anchor a higher value, then offer it for [price]; add a payment-plan option.\n'+
+          'Sales page skeleton: headline \u2192 problem \u2192 promise \u2192 what\u2019s inside \u2192 proof \u2192 price \u2192 guarantee \u2192 CTA.\n'+
+          '\nNext: write the headline for '+T+' and one line of proof.';
+      },
+      'learning-coach': function(){
+        return 'LEARNING LOOP \u2014 '+T+'\n'+
+          '\nGoal: be able to [do the real thing] with '+T+', not just know about it.\n'+
+          '\nFast plan:\n'+
+          'Week 1: learn the 20% of '+T+' that gives 80% of results.\n'+
+          'Week 2: do small reps daily \u2014 build one tiny real project.\n'+
+          'Week 3: get feedback, fix weak spots, increase difficulty.\n'+
+          '\nPractice loop (repeat): learn a bit \u2192 use it immediately \u2192 check what broke \u2192 adjust.\n'+
+          '\nMake it stick: teach '+T+' to someone (or to me) in your own words.';
+      },
+      'life-admin': function(){
+        return 'LIFE / ADMIN SYSTEM \u2014 '+T+'\n'+
+          '\nTurn '+T+' from chaos into a system:\n'+
+          '1. Capture: one place to dump everything about '+T+'.\n'+
+          '2. Routine: a repeatable weekly slot to handle '+T+' (same day/time).\n'+
+          '3. Checklist: the exact steps so it runs on autopilot \u2014\n'+
+          '   [ ] review what\u2019s open\n   [ ] do the 1\u20133 that matter\n   [ ] file/automate the rest\n'+
+          '\nDeclutter rule: if it isn\u2019t a real task, archive it. Wire reminders via Automation Studio so '+T+' never piles up again.';
       }
     };
     var build = make[b.id];
