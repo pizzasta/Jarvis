@@ -13,19 +13,19 @@ var CityState = (function() {
 
 var AgentRegistry = (function() {
   var _b = [
-    { id:'jarvis-core',       icon:'🧠', title:'DIVA CORE',         description:'Master intelligence hub',         theme:{primaryColor:'#ff2d78',secondaryColor:'#ff6bac'}, actions:['Think','Analyse','Respond','Learn'],          memory:{} },
-    { id:'vision-lab',        icon:'👁', title:'VISION LAB',          description:'Visual perception engine',        theme:{primaryColor:'#00e5ff',secondaryColor:'#40ffff'}, actions:['Detect','Classify','Scan','Render'],         memory:{} },
-    { id:'data-vault',        icon:'🗄', title:'DATA VAULT',          description:'Memory & knowledge store',        theme:{primaryColor:'#9d4edd',secondaryColor:'#c77dff'}, actions:['Store','Recall','Index','Forget'],           memory:{} },
-    { id:'neural-forge',      icon:'⚡',    title:'NEURAL FORGE',        description:'Training & optimisation',         theme:{primaryColor:'#ffd700',secondaryColor:'#fff176'}, actions:['Train','Tune','Compile','Benchmark'],        memory:{} },
-    { id:'comms-tower',       icon:'📡', title:'COMMS TOWER',         description:'Multi-modal IO layer',            theme:{primaryColor:'#00ff9f',secondaryColor:'#69ffce'}, actions:['Send','Receive','Broadcast','Relay'],        memory:{} },
-    { id:'sentinel',          icon:'🛡', title:'SENTINEL',            description:'Safety & ethics guard',          theme:{primaryColor:'#ff6b35',secondaryColor:'#ffa987'}, actions:['Guard','Audit','Flag','Allow'],              memory:{} },
+    { id:'jarvis-core',       icon:'🧠', title:'DIVA CORE',         description:'Turn messy goals into a priority plan you can act on today',         theme:{primaryColor:'#ff2d78',secondaryColor:'#ff6bac'}, actions:['Prioritise','Plan My Day','Break Down','Next Step'],          memory:{} },
+    { id:'vision-lab',        icon:'👁', title:'VISION LAB',          description:'Turn an idea into a ready-to-use visual brief & image prompts',        theme:{primaryColor:'#00e5ff',secondaryColor:'#40ffff'}, actions:['Visual Brief','Image Prompt','Moodboard','Shot List'],         memory:{} },
+    { id:'data-vault',        icon:'🗄', title:'DATA VAULT',          description:'Organise scattered notes into a clean, searchable memory structure',        theme:{primaryColor:'#9d4edd',secondaryColor:'#c77dff'}, actions:['Organise','Knowledge Base','Tag & Index','Cheat Sheet'],           memory:{} },
+    { id:'neural-forge',      icon:'⚡',    title:'NEURAL FORGE',        description:'Build a reusable AI workflow / prompt system for a repeat task',         theme:{primaryColor:'#ffd700',secondaryColor:'#fff176'}, actions:['Build Workflow','Prompt System','Agent Spec','Automate'],        memory:{} },
+    { id:'comms-tower',       icon:'📡', title:'COMMS TOWER',         description:'Draft the message, email or reply and send it for you',            theme:{primaryColor:'#00ff9f',secondaryColor:'#69ffce'}, actions:['Draft Email','Reply','DM / Message','Follow-up'],        memory:{} },
+    { id:'sentinel',          icon:'🛡', title:'SENTINEL',            description:'Check a plan or message for risk before you ship it',          theme:{primaryColor:'#ff6b35',secondaryColor:'#ffa987'}, actions:['Risk Check','Red Flags','Stress Test','Safer Version'],              memory:{} },
     { id:'songwriting',       icon:'🎙️', title:'SUNO HELPER',         description:'Lyrics, Suno prompts & music videos', theme:{primaryColor:'#e040fb',secondaryColor:'#f8a6ff'}, actions:['Lyrics','Suno Prompt','MV Ideas','Hooks'],  memory:{} },
     { id:'book-helper',       icon:'📖', title:'BOOK HELPER',         description:'Write books that sound human, not AI', theme:{primaryColor:'#e8b06b',secondaryColor:'#ffd9a0'}, actions:['Outline','Chapter','Blurb','Humanize'],     memory:{} },
     { id:'design-tower',      icon:'🎨', title:'DESIGN TOWER',        description:'Apparel, branding & Shopify AI', theme:{primaryColor:'#ff9500',secondaryColor:'#ffcc02'}, actions:['Design Shirt','Brand Kit','Shopify','Trends'],memory:{} },
-    { id:'edit-library',      icon:'✍️', title:'EDITING LIBRARY',  description:'Polish, refine & perfect prose', theme:{primaryColor:'#4fc3f7',secondaryColor:'#b3e5fc'}, actions:['Proofread','Rewrite','Summarise','Expand'],  memory:{} },
-    { id:'research-district', icon:'🔬', title:'RESEARCH DISTRICT',   description:'Deep-dive knowledge synthesis',  theme:{primaryColor:'#69f0ae',secondaryColor:'#b9fbc0'}, actions:['Research','Fact-Check','Cite','Compare'],    memory:{} },
-    { id:'project-lab',       icon:'🚀', title:'PROJECT LAB',         description:'Plan, build & ship projects',    theme:{primaryColor:'#ff5252',secondaryColor:'#ff8a80'}, actions:['Plan Sprint','Roadmap','Brief','Retro'],     memory:{} },
-    { id:'ops-center',        icon:'⚙️', title:'OPERATIONS CENTER', description:'Automate & orchestrate tasks',  theme:{primaryColor:'#b0bec5',secondaryColor:'#eceff1'}, actions:['Automate','Schedule','Delegate','Monitor'],  memory:{} },
+    { id:'edit-library',      icon:'✍️', title:'EDITING LIBRARY',  description:'Polish text into clear, human, ready-to-publish copy', theme:{primaryColor:'#4fc3f7',secondaryColor:'#b3e5fc'}, actions:['Proofread','Rewrite','Tighten','Humanise'],  memory:{} },
+    { id:'research-district', icon:'🔬', title:'RESEARCH DISTRICT',   description:'Turn a question into a structured research plan & key findings',  theme:{primaryColor:'#69f0ae',secondaryColor:'#b9fbc0'}, actions:['Research Plan','Key Findings','Compare','Sources To Read'],    memory:{} },
+    { id:'project-lab',       icon:'🚀', title:'PROJECT LAB',         description:'Turn a project into a sprint plan with tasks & milestones',    theme:{primaryColor:'#ff5252',secondaryColor:'#ff8a80'}, actions:['Sprint Plan','Roadmap','Task Breakdown','Milestones'],     memory:{} },
+    { id:'ops-center',        icon:'⚙️', title:'OPERATIONS CENTER', description:'Map a repetitive task into an automation you can wire up',  theme:{primaryColor:'#b0bec5',secondaryColor:'#eceff1'}, actions:['Automation Map','SOP','Trigger → Action','Schedule'],  memory:{} },
     { id:'memory-vault',      icon:'💾', title:'MEMORY VAULT',        description:'Long-term context & recall',     theme:{primaryColor:'#7c4dff',secondaryColor:'#b388ff'}, actions:['Remember','Forget','Summarise','Export'],    memory:{} },
     { id:'business-builder',  icon:'👑', title:'BUSINESS BUILDER',    description:'Clothing brand empire: Shopify, Canva, TikTok', theme:{primaryColor:'#00e676',secondaryColor:'#69f0ae'}, actions:['Brand','Products','Shopify','TikTok'], memory:{} },
     { id:'app-trend-builder', icon:'📱', title:'APP TREND BUILDER',   description:'Invents brand-new original app ideas', theme:{primaryColor:'#18ffff',secondaryColor:'#84ffff'}, actions:['Generate','Spec','Trends','Names'], memory:{} },
@@ -437,14 +437,87 @@ var BuildingWorkspace = (function() {
     return { system:sys, prompt:prompt };
   }
   function _agentTemplate(b, action, input){
-    var a=(action||'Respond');
-    return b.title+' — '+a+'\n\n'+
-      (input?('On: "'+input.slice(0,180)+(input.length>180?'…':'')+'"\n\n'):'')+
-      'Quick result:\n'+
-      '1. Goal — state what "'+a.toLowerCase()+'" should achieve here in one line.\n'+
-      '2. Do it — three concrete steps to '+a.toLowerCase()+' this now.\n'+
-      '3. Check — how you\'ll know it worked, and the next move.\n\n'+
-      '✨ Connect AI (top bar) and '+b.title+' will fully '+a.toLowerCase()+' this for you — real output, not a checklist.';
+    var a = (action||(b.actions&&b.actions[0])||'Respond');
+    var topic = (input||'').trim();
+    var subj = topic ? '\"'+topic.slice(0,120)+(topic.length>120?'\u2026':'')+'\"' : 'your goal';
+    var T = (topic||'your goal');
+    var lower = a.toLowerCase();
+    // Each core agent returns a CONCRETE deliverable, not a generic checklist.
+    var make = {
+      'jarvis-core': function(){
+        return 'PRIORITY PLAN \u2014 '+T+'\n'+
+          '\nTop 3 (do these first):\n'+
+          '1. [most leverage] \u2014 the one move that unblocks the rest of '+T+'\n'+
+          '2. [quick win] \u2014 finish in <30 min for momentum\n'+
+          '3. [deadline-driven] \u2014 whatever has the nearest hard date\n'+
+          '\nLater / backlog:\n- park lower-impact items here so they stop competing for attention\n'+
+          '\nFirst step right now: open the Top 1 task and do its smallest piece (5 min).';
+      },
+      'vision-lab': function(){
+        return 'VISUAL BRIEF + IMAGE PROMPTS \u2014 '+T+'\n'+
+          '\nBrief: subject = '+T+'; mood = bold/clean; audience = scroll-stopping.\n'+
+          '\nReady-to-paste image prompts (Midjourney / DALL\u00b7E / SDXL):\n'+
+          '1. \"'+T+', hero shot, dramatic rim lighting, ultra-detailed, 50mm, cinematic, --ar 4:5\"\n'+
+          '2. \"'+T+', flat-lay on textured background, soft daylight, product-photography, --ar 1:1\"\n'+
+          '3. \"'+T+', minimalist poster, negative space, neon accent, vector, --ar 9:16\"\n'+
+          '\nShot list: hero, detail close-up, in-context/lifestyle, alt color.';
+      },
+      'data-vault': function(){
+        return 'MEMORY STRUCTURE \u2014 '+T+'\n'+
+          '\nFolders:\n- '+T+'/ Overview (one-paragraph summary)\n- '+T+'/ Key facts (bullet list)\n- '+T+'/ Decisions (date \u2192 what \u2192 why)\n- '+T+'/ Open questions\n'+
+          '\nTags: #'+T.replace(/\s+/g,'-').toLowerCase()+' #reference #todo\n'+
+          '\nCheat sheet: pin the 5 facts you reuse most at the top so recall is instant.';
+      },
+      'neural-forge': function(){
+        return 'REUSABLE AI WORKFLOW \u2014 '+T+'\n'+
+          '\nInput \u2192 Steps \u2192 Output\n'+
+          '1. Capture: paste the raw '+T+' input.\n'+
+          '2. Transform: run this prompt \u2014 \"You are a '+T+' specialist. Given INPUT, produce X in this exact format: \u2026\"\n'+
+          '3. Validate: auto-check the result against a 3-point rubric.\n'+
+          '4. Deliver: format as the asset you actually need.\n'+
+          '\nReuse: save this as a saved prompt / agent so the next '+T+' job is one click.';
+      },
+      'comms-tower': function(){
+        return 'DRAFT MESSAGE \u2014 re: '+T+'\n'+
+          '\nSubject: '+T+'\n'+
+          '\nHi [name],\n\nQuick note about '+T+'. [one line of context.] Here\u2019s what I\u2019m proposing: [the ask / update]. Could you [specific next action] by [date]?\n\nThanks,\n[you]\n'+
+          '\nTone variants: warmer / more formal / shorter \u2014 say which and I\u2019ll adjust. Connect AI + a webhook to actually send it.';
+      },
+      'sentinel': function(){
+        return 'RISK GATE \u2014 '+T+'\n'+
+          '\nRed flags to check before shipping:\n- Claims: anything overstated or unverifiable in '+T+'?\n- Privacy/security: any secrets, PII or access being exposed?\n- Reversibility: can you undo it if it goes wrong?\n- Tone: could '+T+' be read as misleading or harmful?\n'+
+          '\nGate decision: GO only if all four are clear; otherwise apply the safer version first.';
+      },
+      'edit-library': function(){
+        return 'POLISHED COPY \u2014 '+T+'\n'+
+          (topic ? '\nCleaner version of your text:\n\u201c'+topic.slice(0,400)+(topic.length>400?'\u2026':'')+'\u201d \u2014 tightened: cut filler, active voice, one idea per sentence.\n' : '\nPaste text and I\u2019ll return a tightened, human-sounding version.\n')+
+          '\nEdits applied: removed hedging, shortened long sentences, fixed rhythm so it reads like a person wrote it.';
+      },
+      'research-district': function(){
+        return 'RESEARCH PLAN \u2014 '+T+'\n'+
+          '\nQuestion: what do I actually need to know about '+T+'?\n'+
+          '\nSub-questions:\n1. What\u2019s the current state / baseline?\n2. What are the main options / viewpoints?\n3. What does the best evidence say?\n'+
+          '\nSources to read: 1 primary source, 1 expert overview, 1 contrarian take.\n'+
+          '\nDeliverable: a 5-bullet findings summary + your recommendation.';
+      },
+      'project-lab': function(){
+        return 'SPRINT PLAN \u2014 '+T+'\n'+
+          '\nGoal of this sprint: ship one usable slice of '+T+'.\n'+
+          '\nTasks:\n[ ] Define done (1 sentence)\n[ ] Break '+T+' into 3\u20135 tasks\n[ ] Build the smallest end-to-end version\n[ ] Test it\n[ ] Ship / demo\n'+
+          '\nMilestones: Day 1 plan \u2192 Day 3 build \u2192 Day 5 ship. Retro: what to keep/drop next sprint.';
+      },
+      'ops-center': function(){
+        return 'AUTOMATION MAP \u2014 '+T+'\n'+
+          '\nTrigger \u2192 Action:\n- When [event in '+T+' happens] \u2192 do [step 1] \u2192 then [step 2] \u2192 notify [you/channel].\n'+
+          '\nSOP (so a human or bot can run it): 1) check input, 2) run the steps above, 3) log the result.\n'+
+          '\nWire it up: paste a Zapier/Make/n8n webhook in Connect AI and the \u26a1 Run automation button fires this for real.';
+      }
+    };
+    var build = make[b.id];
+    var body = build ? build() : (
+      b.title+' \u2014 '+a+'\n\n'+(topic?('On '+subj+'\n\n'):'')+
+      'Deliverable:\n1. '+T+' \u2014 the concrete thing this agent produces.\n2. Steps taken to '+lower+' it.\n3. The finished result you can use right now.');
+    return body+'\n\n\u2728 Connect AI (top bar) and '+b.title+' will generate a tailored, ready-to-use '+lower+' \u2014 a real deliverable, not a checklist.';
   }
   function _agentRun(id, action){
     var b=AgentRegistry.getById(id); if(!b) return;
