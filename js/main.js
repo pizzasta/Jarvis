@@ -19,6 +19,7 @@ var AgentRegistry = (function() {
     { id:'neural-forge',      icon:'⚡',    title:'NEURAL FORGE',        description:'Build a reusable AI workflow / prompt system for a repeat task',         theme:{primaryColor:'#ffd700',secondaryColor:'#fff176'}, actions:['Build Workflow','Prompt System','Agent Spec','Automate'],        memory:{} },
     { id:'comms-tower',       icon:'📡', title:'COMMS TOWER',         description:'Draft the message, email or reply and send it for you',            theme:{primaryColor:'#00ff9f',secondaryColor:'#69ffce'}, actions:['Draft Email','Reply','DM / Message','Follow-up'],        memory:{} },
     { id:'sentinel',          icon:'🛡', title:'SENTINEL',            description:'Check a plan or message for risk before you ship it',          theme:{primaryColor:'#ff6b35',secondaryColor:'#ffa987'}, actions:['Risk Check','Red Flags','Stress Test','Safer Version'],              memory:{} },
+    { id:'google-agent',    icon:'\uD83D\uDD0D', title:'GOOGLE AGENT',       description:'Type what you want and jump straight to the website you mean', theme:{primaryColor:'#4285F4',secondaryColor:'#34A853'}, actions:['Open Top Site','Search Google','Images','News'], memory:{} },
     { id:'songwriting',       icon:'🎙️', title:'SUNO HELPER',         description:'Lyrics, Suno prompts & music videos', theme:{primaryColor:'#e040fb',secondaryColor:'#f8a6ff'}, actions:['Lyrics','Suno Prompt','MV Ideas','Hooks'],  memory:{} },
     { id:'book-helper',       icon:'📖', title:'BOOK HELPER',         description:'Write books that sound human, not AI', theme:{primaryColor:'#e8b06b',secondaryColor:'#ffd9a0'}, actions:['Outline','Chapter','Blurb','Humanize'],     memory:{} },
     { id:'design-tower',      icon:'🎨', title:'DESIGN TOWER',        description:'Apparel, branding & Shopify AI', theme:{primaryColor:'#ff9500',secondaryColor:'#ffcc02'}, actions:['Design Shirt','Brand Kit','Shopify','Trends'],memory:{} },
@@ -48,11 +49,11 @@ var CityManager = (function() {
   var _cities = [
     { id:'creator', name:'CREATOR CITY', icon:'🎨', tagline:'Music, books & design',        accent:'#ff2d78', accent2:'#ff6bac', buildings:['songwriting','book-helper','design-tower','edit-library'] },
     { id:'mind',    name:'MIND CITY',    icon:'🧠', tagline:'Memory, research & reasoning', accent:'#9d4edd', accent2:'#c77dff', buildings:['jarvis-core','memory-vault','research-district','neural-forge'] },
-    { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel'] },
+    { id:'vision',  name:'VISION CITY',  icon:'👁', tagline:'Perception & comms',           accent:'#00e5ff', accent2:'#5ef2ff', buildings:['vision-lab','data-vault','comms-tower','sentinel','google-agent'] },
     { id:'launch',  name:'LAUNCH CITY',  icon:'🚀', tagline:'Build, automate & ship',       accent:'#ff5252', accent2:'#ff8a80', buildings:['project-lab','ops-center','design-tower','data-vault'] },
     { id:'empire',  name:'EMPIRE CITY',  icon:'👑', tagline:'Brands, business, trading & new apps', accent:'#00e676', accent2:'#69f0ae', buildings:['business-builder','app-trend-builder','trade-desk','design-tower','project-lab'] },
     { id:'wealth',  name:'WEALTH CITY',  icon:'💸', tagline:'Automated AI income, $0 upfront',     accent:'#2bd576', accent2:'#ffd54f', buildings:['income-lab','automation-studio','business-builder','trade-desk','app-trend-builder'] },
-    { id:'goalstack', name:'GOAL STACK', icon:'\uD83E\uDDED', tagline:'Pick agents by outcome, low effort', accent:'#ff2d78', accent2:'#7af0ff', buildings:['goal-concierge','content-engine','offer-lab','learning-coach','life-admin','automation-studio'] }
+    { id:'goalstack', name:'GOAL STACK', icon:'\uD83E\uDDED', tagline:'Pick agents by outcome, low effort', accent:'#ff2d78', accent2:'#7af0ff', buildings:['goal-concierge','content-engine','offer-lab','learning-coach','life-admin','automation-studio','google-agent'] }
   ];
   var _active = 'creator';
   function all() { return _cities; }
@@ -390,6 +391,7 @@ var BuildingWorkspace = (function() {
     if(id==='trade-desk'){ if(body){ body.innerHTML=''; if(typeof TradeDesk!=='undefined'){ TradeDesk.mount(body,opts); } else { body.innerHTML='<p style="color:#ffe082;padding:2rem">Loading Trade Desk...</p>'; } } return; }
     if(id==='income-lab'){ if(body){ body.innerHTML=''; if(typeof IncomeLab!=='undefined'){ IncomeLab.mount(body,opts); } else { body.innerHTML='<p style="color:#7bf7ad;padding:2rem">Loading AI Income Lab...</p>'; } } return; }
     if(id==='automation-studio'){ if(body){ body.innerHTML=''; if(typeof AutomationStudio!=='undefined'){ AutomationStudio.mount(body,opts); } else { body.innerHTML='<p style="color:#c4bcff;padding:2rem">Loading Automation Studio...</p>'; } } return; }
+    if(id === 'google-agent'){ _googleAgent(id, body, opts); return; }
     if(id==='comms-tower'){ _commsComposer(id, body, opts); return; }
     if(!body) return;
     var b=AgentRegistry.getById(id); if(!b) return;
@@ -601,6 +603,43 @@ var BuildingWorkspace = (function() {
     return '<div class="agent-console__auto'+(on?' is-on':'')+'">'+(on?'⚡ Automation: connected':'⚡ Automation: off — add a webhook in ✨ Connect AI')+'</div>';
   }
   // ---- Comms Tower: a real email composer (AI draft + send) ----
+  function _googleAgent(id, body, opts){
+    if(!body) return;
+    var b = AgentRegistry.getById(id);
+    var G = 'https://www.google.com/search';
+    body.innerHTML = [
+      '<div class="agent-console">',
+        '<div class="agent-console__head">',
+          '<div class="agent-console__icon">'+(b?b.icon:'\uD83D\uDD0D')+'</div>',
+          '<div class="agent-console__id"><div class="agent-console__name">GOOGLE AGENT</div><div class="agent-console__desc">Type what you want \u2014 jump straight to the website you mean.</div></div>',
+          '<div class="agent-console__status"><span class="agent-console__dot"></span>ONLINE</div>',
+        '</div>',
+        '<label class="agent-console__lbl" for="ga-input">What site or thing are you looking for?</label>',
+        '<textarea class="agent-console__input" id="ga-input" rows="2" placeholder="e.g. openai, my city library hours, react docs, weather in tokyo"></textarea>',
+        '<div class="agent-console__chips">'+
+          '<button class="agent-console__do agent-console__do--ask" id="ga-lucky" type="button">\u26A1 Open top site</button>'+
+          '<button class="agent-console__do" id="ga-search" type="button">Search Google</button>'+
+          '<button class="agent-console__do" id="ga-images" type="button">Images</button>'+
+          '<button class="agent-console__do" id="ga-news" type="button">News</button>'+
+        '</div>',
+        '<div class="agent-console__outlbl">Result <span class="agent-console__count" id="ga-status"></span></div>',
+        '<div class="agent-console__out" id="ga-out">Type a query, then tap <b>Open top site</b> to jump straight to the #1 website for it (Google I\u2019m Feeling Lucky), or <b>Search Google</b> for the full results page. Opens in a new tab.</div>',
+      '</div>'
+    ].join('');
+    if(opts && opts.prefill){ var pi=document.getElementById('ga-input'); if(pi) pi.value=opts.prefill; }
+    function q(){ var el=document.getElementById('ga-input'); return el ? el.value.trim() : ''; }
+    function go(url, label){ var out=document.getElementById('ga-out'), st=document.getElementById('ga-status'); var qq=q(); if(!qq){ if(out) out.textContent='Type what you are looking for first.'; return; } window.open(url, '_blank', 'noopener'); if(st) st.textContent='opened'; if(out) out.textContent=label+' \u2014 \u201C'+qq+'\u201D \u2014 opened in a new tab.'; }
+    var lucky=document.getElementById('ga-lucky');
+    if(lucky) lucky.addEventListener('click', function(){ go(G+'?q='+encodeURIComponent(q())+'&btnI=I', 'Opening top site for'); });
+    var search=document.getElementById('ga-search');
+    if(search) search.addEventListener('click', function(){ go(G+'?q='+encodeURIComponent(q()), 'Searching Google for'); });
+    var images=document.getElementById('ga-images');
+    if(images) images.addEventListener('click', function(){ go(G+'?tbm=isch&q='+encodeURIComponent(q()), 'Image search for'); });
+    var news=document.getElementById('ga-news');
+    if(news) news.addEventListener('click', function(){ go(G+'?tbm=nws&q='+encodeURIComponent(q()), 'News search for'); });
+    var input=document.getElementById('ga-input');
+    if(input) input.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); go(G+'?q='+encodeURIComponent(q())+'&btnI=I', 'Opening top site for'); } });
+  }
   function _commsComposer(id, body, opts){
     if(!body) return; opts=opts||{};
     var b=AgentRegistry.getById(id)||{icon:'📡',title:'COMMS TOWER',description:'Compose & send email with AI'};
