@@ -60,7 +60,7 @@ var JarvisBrain = (function() {
       reply:function(){ return 'I was built for you, '+USER+' — your own DIVA, running right here in your browser.'; } },
 
     { test:/what can you do|help|what do you do|capabilities|features|how do (i|you) work|guide me/i,
-      reply:function(){ return 'Quite a lot, '+USER+'. Try the Suno Helper for lyrics and music video ideas; the Book Helper to write books that sound genuinely human; the Business Builder to launch a clothing brand with Shopify, Canva, printables and TikTok; or the App Trend Builder to invent brand-new original app ideas. Just ask me anything by voice, or switch cities up top — visit Empire City for the business tools.'; } },
+      reply:function(){ return 'Quite a lot, '+USER+'. Try the Suno Helper for music; the Book Helper for human-sounding books; the Business Builder for a clothing brand; or the App Trend Builder for original app ideas. Need outcomes fast? Visit the Goal Stack city: the Goal Concierge tells you where to start, the Content Engine builds a week of posts, the Offer Lab packages something to sell, the Learning Coach plans any skill, and Life Admin turns chaos into routines. Just ask me by voice, or switch cities up top.'; } },
 
     { test:/thank|cheers|appreciate|nice one/i,
       reply:function(){ return _pick(['Always a pleasure, '+USER+'.','My pleasure entirely, '+USER+'.','Anytime, '+USER+'.']); } },
@@ -97,6 +97,21 @@ var JarvisBrain = (function() {
 
     { test:/automat(e|ion)|workflow|zapier|make\.com|n8n|ai agent|autopilot|automate (my|the)|build a bot|integrat/i,
       reply:function(){ return null; }, route:'automation-studio' },
+
+    { test:/content (plan|idea|calendar)|post(s|ing)? ideas|captions\?|go viral|content for|repurpose|reels\?|what (should|do) i post|grow (my|an) (audience|account|page)/i,
+      reply:function(){ return null; }, route:'content-engine' },
+
+    { test:/(create|build|make|package|design) an offer|my offer|sell (my|a) (skill|service|course|product)|pricing|price my|sales page|what (should|can) i (sell|charge)|monet(ise|ize) my/i,
+      reply:function(){ return null; }, route:'offer-lab' },
+
+    { test:/learn (to|how|a |about )|teach me|study|master|get good at|skill|course plan|how do i learn|i want to learn|revision|practice/i,
+      reply:function(){ return null; }, route:'learning-coach' },
+
+    { test:/routine|habit|organi[sz]e my (life|day|week)|declutter|life admin|chores|to-?do system|stay on top|planner|morning routine|get my life together/i,
+      reply:function(){ return null; }, route:'life-admin' },
+
+    { test:/where (do|should) i start|i don'?t know where to start|help me (pick|choose|decide)|what agent|which (agent|tool)|i have a goal|my goal is|reach my goal|too many ideas|overwhelmed/i,
+      reply:function(){ return null; }, route:'goal-concierge' },
 
     { test:/who am i|my name/i,
       reply:function(){ return 'You are '+USER+' — the one in charge around here.'; } }
