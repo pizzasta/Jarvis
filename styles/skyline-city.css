@@ -1,3 +1,59 @@
+
+
+/* ===== DIVA Aerial Neon City (street grid + background skyline) ===== */
+.city-scene{
+     background: radial-gradient(130% 100% at 50% 0%, #3a1255 0%, #1b0832 42%, #0a0316 100%) !important;
+     perspective: 1200px;
+     perspective-origin: 50% 0%;
+}
+/* glowing pink street grid floor */
+.diva-streets{
+     position: absolute; left: 50%; bottom: -8%; width: 240%; height: 130%;
+     transform: translateX(-50%) perspective(900px) rotateX(70deg);
+     transform-origin: 50% 100%;
+     background-image:
+       repeating-linear-gradient(0deg, transparent 0 76px, #ff2d9a 80px 82px, transparent 82px 84px),
+            repeating-linear-gradient(90deg, transparent 0 76px, #ff2d9a 80px 82px, transparent 82px 84px);
+     filter: drop-shadow(0 0 5px #ff2d9a) drop-shadow(0 0 12px rgba(255,45,154,0.55));
+     opacity: 0.85; pointer-events: none; z-index: 0;
+     -webkit-mask-image: radial-gradient(85% 75% at 50% 25%, #000 25%, transparent 88%);
+     mask-image: radial-gradient(85% 75% at 50% 25%, #000 25%, transparent 88%);
+}
+.diva-streets::after{
+     content: ""; position: absolute; inset: 0;
+     background-image: repeating-linear-gradient(90deg, transparent 0 76px, rgba(0,229,255,0.9) 80px 82px, transparent 82px 84px);
+     filter: drop-shadow(0 0 7px #00e5ff); opacity: 0.55;
+     animation: divaTraffic 3.2s linear infinite;
+}
+@keyframes divaTraffic{ from{ background-position: 0 0; } to{ background-position: 0 240px; } }
+
+/* dense background city */
+.diva-bg-city{ position: absolute; left: 0; right: 0; bottom: 0; height: 78%; z-index: 2; pointer-events: none; }
+.diva-bg-city .bgb{
+     position: absolute;
+     background-image:
+       linear-gradient(180deg, color-mix(in srgb, var(--c) 26%, #0a0316), #07020f),
+            repeating-linear-gradient(0deg, transparent 0 5px, rgba(255,255,255,0.05) 5px 6px),
+            repeating-linear-gradient(90deg, transparent 0 3px, rgba(255,255,255,0.06) 3px 4px);
+     border-top: 2px solid var(--c);
+     box-shadow: 0 0 8px color-mix(in srgb, var(--c) 60%, transparent), inset -3px 0 6px rgba(0,0,0,0.7);
+     opacity: var(--o);
+}
+
+/* foreground 5 project towers stay prominent */
+.city-grid{ z-index: 6 !important; gap: 22px !important; }
+.building-card{
+     box-shadow:
+       inset 2px 0 0 rgba(255,180,235,0.4),
+            inset -6px 0 14px rgba(8,2,20,0.8),
+            0 0 22px rgba(255,45,154,0.45),
+            20px 18px 46px rgba(0,0,0,0.7) !important;
+}
+.building-card:nth-child(1){ height: 340px !important; }
+.building-card:nth-child(2){ height: 470px !important; }
+.building-card:nth-child(3){ height: 380px !important; }
+.building-card:nth-child(4){ height: 540px !important; }
+.building-card:nth-child(5){ height: 410px !important; }
 /* ═══════════════════════════════════════════════════════════
    SKYLINE CITY — neon-pink futuristic cityscape
    Turns the AI-agent buildings into glowing skyline towers and
