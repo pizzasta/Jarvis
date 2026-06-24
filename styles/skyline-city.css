@@ -442,3 +442,20 @@ body[data-city-state="active"] .fog { opacity: 0.7; }
 .comms-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
 .comms-grid .agent-console__lbl{display:flex;flex-direction:column;gap:.25rem;}
 @media(max-width:560px){.comms-grid{grid-template-columns:1fr;}}
+
+
+/* ===== DIVA 3D building upgrade ===== */
+.city-grid{ perspective: 1500px; perspective-origin: 50% 35%; }
+.building-card{
+     transform: rotateY(-10deg) !important;
+     transform-style: preserve-3d;
+     box-shadow:
+            inset 2px 0 0 rgba(214,200,255,0.40),
+            inset 3px 3px 8px rgba(170,150,255,0.16),
+            inset -5px 0 0 rgba(9,2,22,0.85),
+            inset -10px 0 16px rgba(35,10,64,0.55),
+            14px 0 0 -2px rgba(14,5,30,0.95),
+            22px 0 0 -6px rgba(9,3,20,0.95),
+            26px 6px 34px rgba(0,0,0,0.55) !important;
+}
+.building-card:hover{ transform: rotateY(-6deg) translateY(-4px) !important; }
