@@ -826,3 +826,50 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   console.log('[JARVIS] City v3.2 - Business Builder + App Trend Builder + live AI online.');
 });
+
+
+/* ===== DIVA Aerial Neon City: street grid + background skyline ===== */
+(function divaAerialCity(){
+    var COLORS = ['#ff2d9a','#b14dff','#00e5ff','#ff5ec4','#7b2dff','#ff2d78','#d14dff'];
+    function build(scene){
+          if(!scene) return;
+          if(!scene.querySelector('.diva-streets')){
+                  var streets = document.createElement('div');
+                  streets.className = 'diva-streets';
+                  scene.insertBefore(streets, scene.firstChild);
+          }
+          if(!scene.querySelector('.diva-bg-city')){
+                  var bg = document.createElement('div');
+                  bg.className = 'diva-bg-city';
+                  bg.setAttribute('aria-hidden','true');
+                  var N = 70, html = '';
+                  for(var i=0;i<N;i++){
+                            var left = (Math.random()*100).toFixed(2);
+                            var depth = Math.random();
+                            var w = (8 + depth*16).toFixed(1);
+                            var h = (120 + depth*340 + Math.random()*80).toFixed(0);
+                            var c = COLORS[(Math.random()*COLORS.length)|0];
+                            var o = (0.30 + depth*0.55).toFixed(2);
+                            var z = (depth*20)|0;
+                            var bottom = ((1-depth)*20).toFixed(1);
+                            html += '<div class="bgb" style="left:'+left+'%;width:'+w+'px;height:'+h+'px;--c:'+c+';--o:'+o+';z-index:'+z+';bottom:'+bottom+'%"></div>';
+                  }
+                  bg.innerHTML = html;
+                  scene.appendChild(bg);
+          }
+    }
+    function init(){
+          var scene = document.querySelector('.city-scene');
+          if(scene){ build(scene); return; }
+          var tries = 0;
+          var iv = setInterval(function(){
+                  var s = document.querySelector('.city-scene');
+                  if(s || ++tries > 40){ clearInterval(iv); build(s); }
+          }, 150);
+    }
+    if(document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', init);
+    } else {
+          init();
+    }
+})();
