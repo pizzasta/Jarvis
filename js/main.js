@@ -842,8 +842,9 @@ document.addEventListener('DOMContentLoaded', function() {
                   var bg = document.createElement('div');
                   bg.className = 'diva-bg-city';
                   bg.setAttribute('aria-hidden','true');
-                  var N = 70, html = '';
-                  for(var i=0;i<N;i++){
+var _w = window.innerWidth, _cores = navigator.hardwareConcurrency || 4, _mem = navigator.deviceMemory || 4;
+                  var N = (_w < 500) ? 22 : ((_w < 700 || _cores <= 4 || _mem <= 4) ? 40 : 70), html = ''
+                    ;for(var i=0;i<N;i++){
                             var left = (Math.random()*100).toFixed(2);
                             var depth = Math.random();
                             var w = (8 + depth*16).toFixed(1);
